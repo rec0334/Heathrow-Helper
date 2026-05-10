@@ -1,0 +1,50 @@
+{
+  "water": {
+    "name": "Drinking water fountains",
+    "info": "Free water refill stations are available in every terminal, both before and after security. Look for blue 'Refill' signs near toilets and food courts."
+  },
+  "prayer": {
+    "name": "Multi-faith prayer rooms",
+    "info": "Every terminal has multi-faith prayer rooms, open 24 hours. Locations: T2 (Level 4 departures), T3 (departures lounge), T4 (Level 1 arrivals), T5 (T5A and T5B departures). Wash facilities are available."
+  },
+  "smoking": {
+    "name": "Smoking and vaping areas",
+    "info": "There are no smoking or vaping areas inside any Heathrow terminal. Designated outdoor smoking areas are signposted outside the terminal entrances. Once you're past security, you cannot smoke or vape until you reach your destination."
+  },
+  "family": {
+    "name": "Family and baby-care rooms",
+    "info": "Baby-changing facilities and family rooms are in every terminal, on both landside and airside. They include changing tables, bottle warmers, microwaves, and feeding chairs. Look for the family icon on signage."
+  },
+  "charging": {
+    "name": "Charging points",
+    "info": "Power sockets and USB ports are located at most seating areas after security in all terminals. Most departure lounges also have free Wi-Fi, and many gates have charging stations."
+  },
+  "atm": {
+    "name": "ATMs and currency exchange",
+    "info": "ATMs are at every terminal, both landside and airside. Currency exchange (Travelex, ICE) is also available, including refund desks. Card payments are accepted almost everywhere, so cash is rarely needed."
+  },
+  "pharmacy": {
+    "name": "Pharmacy",
+    "info": "Boots pharmacy stores are located in every terminal, both landside and airside. They stock medication, travel essentials, and basic first aid. T5 has the largest store."
+  },
+  "lost": {
+    "name": "Lost property",
+    "info": "Heathrow Lost Property is run by Smarte Carte. To report or claim a lost item, visit heathrow.com/lost-property or call +44 (0)20 8745 7727. Items found on a flight should be reported to the airline directly."
+  },
+  "luggage": {
+    "name": "Luggage storage",
+    "info": "Excess Baggage Company offers left-luggage storage at every terminal, both landside and airside. Open from early morning to late evening. Around £11 per item per day."
+  },
+  "shower": {
+    "name": "Showers",
+    "info": "Showers are available inside most lounges and at YOTEL Heathrow (T4). Plaza Premium and No1 Lounge sell day passes that include shower access if you don't have lounge entitlement."
+  },
+  "wifi": {
+    "name": "Wi-Fi",
+    "info": "Free Wi-Fi is available throughout all terminals. Connect to '_Heathrow Wi-Fi' and accept the terms. No time limit."
+  },
+  "post": {
+    "name": "Post office",
+    "info": "There is a Post Office counter at Terminal 5 (landside). Most other terminals have post boxes for stamped mail near WHSmith or the information desks."
+  }
+}

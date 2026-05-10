@@ -1,0 +1,571 @@
+import difflib
+import json
+import os
+import re
+import time
+from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+CACHE_TTL = 60
+_cache: dict = {}
+_translation_cache: dict = {}
+
+DATA = Path(__file__).parent / "data"
+
+
+def _load(name: str):
+    return json.loads((DATA / name).read_text(encoding="utf-8"))
+
+
+AIRLINES = _load("airlines_terminals.json")
+ITEMS = _load("allowed_items.json")
+WALK = _load("walk_times.json")
+TRANSPORT = _load("transport.json")
+LOUNGES = _load("lounges.json")
+CONNECTIONS = _load("connections.json")
+FACILITIES = _load("facilities.json")
+BAGGAGE = _load("baggage.json")
+CHECKIN = _load("checkin.json")
+SECURITY = _load("security.json")
+DINING = _load("dining.json")
+SPECIAL_ASSISTANCE = _load("special_assistance.json")
+PARKING = _load("parking.json")
+AVIA_KEY = os.getenv("AVIATIONSTACK_KEY")
+
+# optional deps for multi-language
+try:
+    from langdetect import detect, DetectorFactory
+    DetectorFactory.seed = 0
+    HAS_LANGDETECT = True
+except Exception:
+    HAS_LANGDETECT = False
+
+try:
+    from deep_translator import GoogleTranslator
+    HAS_TRANSLATOR = True
+except Exception:
+    HAS_TRANSLATOR = False
+
+SUPPORTED_LANGS = {"fr", "es", "ar", "zh-cn", "zh-tw", "de", "it", "pt", "ja", "ko", "ru", "hi", "tr", "nl", "pl"}
+
+TRANSPORT_ALIASES = {
+    "heathrow express": ["heathrow express", "hex"],
+    "elizabeth line": ["elizabeth line", "elizabeth", "crossrail"],
+    "tube": ["tube", "underground", "piccadilly"],
+    "bus": ["coach", "national express", " bus "],
+    "taxi": ["black taxi", "black cab", "taxi", " cab "],
+    "uber": ["uber", "bolt", "minicab", "lyft"],
+}
+
+FACILITY_ALIASES = {
+    "water": ["water", "drinking", "fountain", "refill"],
+    "prayer": ["prayer", "pray", "mosque", "chapel", "multi-faith", "multifaith"],
+    "smoking": ["smoking", "smoke", "vape", "vaping", "cigarette"],
+    "family": ["family room", "baby", "nursery", "changing", "feeding"],
+    "charging": ["charging", "charge port", "charging point", "power outlet", "power socket", " usb"],
+    "atm": [" atm", "cash machine", "bureau", "currency exchange"],
+    "pharmacy": ["pharmacy", "boots", "medicine", "drug store", "first aid"],
+    "lost": ["lost property", "lost and found", "left behind", "missing item"],
+    "luggage_storage": ["luggage storage", "left luggage", "bag storage", "store luggage"],
+    "shower": ["shower"],
+    "wifi": ["wifi", "wi-fi", "internet"],
+    "post": ["post office", "stamps", "post box", "mail"],
+}
+
+ASSISTANCE_ALIASES = {
+    "wheelchair": ["wheelchair", "reduced mobility", "mobility assistance", "special assistance"],
+    "hidden disability": ["hidden disability", "sunflower", "lanyard", "invisible disability"],
+    "unaccompanied minor": ["unaccompanied", "child alone", "minor flying", "kid alone", "child flying alone"],
+    "visual impairment": ["blind", "visually impaired", "visual impair", "low vision", "guide dog"],
+    "hearing impairment": ["deaf", "hard of hearing", "hearing impair", "induction loop", "bsl", "sign language"],
+    "autism": ["autism", "autistic", "sensory room", "sensory need"],
+    "service animal": ["service dog", "service animal", "assistance dog"],
+}
+
+PARKING_ALIASES = {
+    "taxi rank": ["taxi rank", "uber pickup", "uber pick", "rideshare pickup", "rideshare", "ride share", "bolt pickup"],
+    "short stay": ["short stay", "short-stay", "hourly parking"],
+    "long stay": ["long stay", "long-stay", "cheap parking"],
+    "business": ["business parking", "valet", "meet and greet"],
+    "drop-off": ["drop-off", "drop off", "kiss and fly", "kiss & fly", "forecourt"],
+    "pickup": ["pick up arrivals", "picking up arrivals", "collect arrivals", "pickup arrivals", " pick up "],
+}
+
+BAGGAGE_KEYWORDS = ["baggage", " luggage", "carry-on", "carry on", "cabin bag", "checked bag", "allowance"]
+CHECKIN_KEYWORDS = ["check in", "check-in", "checkin", "bag drop", "online check"]
+SECURITY_KEYWORDS = [" security ", "fast track", "fast-track", "ct scanner"]
+DINING_KEYWORDS = [" food ", "restaurant", " eat ", "dining", " shop", "duty-free", "duty free", "tax-free", "tax free", "shopping"]
+BRING_KEYWORDS = [" bring ", " take ", " pack ", " carry ", "permit", "allowed in"]
+PARKING_GENERAL = ["parking", "car park", "park my car"]
+
+CABIN_CLASSES = {
+    "economy": ["economy", "coach", "main cabin", "basic"],
+    "premium economy": ["premium economy", "prem econ", "premium econ"],
+    "business": ["business", " club ", "j class"],
+    "first": ["first class", " first "],
+}
+
+
+_FLIGHT_CODE = re.compile(r"\b[A-Z]{2,3}\d{1,4}\b")
+_EN_KW = re.compile(r"\b(what|where|how|when|why|can|is|are|do|does|the|my|your|i|we|baggage|terminal|flight|gate|lounge|security|check[-\s]?in|status|bring|airport|heathrow|lhr|t[2-5]|economy|business|first|premium|wheelchair|lounges|parking|drop|pickup|tube|express)\b", re.IGNORECASE)
+
+
+def _detect_language(msg: str) -> str:
+    if not HAS_LANGDETECT or len(msg.strip()) < 15:
+        return "en"
+    if _FLIGHT_CODE.search(msg.upper()):
+        return "en"
+    if re.search(r"\b[Tt][2-5]\b", msg):
+        return "en"
+    # short queries with English keywords are likely English even if langdetect is fooled
+    if len(msg.strip()) < 30 and _EN_KW.search(msg):
+        return "en"
+    try:
+        from langdetect import detect_langs
+        results = detect_langs(msg)
+        if not results:
+            return "en"
+        top = results[0]
+        if top.lang in SUPPORTED_LANGS and top.lang != "en" and top.prob > 0.55:
+            return top.lang
+    except Exception:
+        pass
+    return "en"
+
+
+def _translate(text: str, source: str, target: str) -> str:
+    if not HAS_TRANSLATOR or source == target:
+        return text
+    key = (source, target, text[:300])
+    if key in _translation_cache:
+        return _translation_cache[key]
+    try:
+        result = GoogleTranslator(source=source, target=target).translate(text)
+        if result:
+            _translation_cache[key] = result
+            return result
+    except Exception:
+        pass
+    return text
+
+
+def respond(msg: str) -> str:
+    if not msg:
+        return "Hi! What can I help you with?"
+    lang = _detect_language(msg)
+    if lang == "en" or lang not in SUPPORTED_LANGS:
+        return _respond_en(msg)
+    en_query = _translate(msg, source=lang, target="en")
+    en_reply = _respond_en(en_query)
+    return _translate(en_reply, source="en", target=lang)
+
+
+def _respond_en(msg: str) -> str:
+    if not msg:
+        return "Hi! What can I help you with?"
+    m = " " + re.sub(r"[^\w\s-]", " ", msg.lower().strip()) + " "
+
+    if any(k in m for k in ["connection", "connecting", "transfer between", "minimum connection", " mct ", " transit "]):
+        return handle_connections(m)
+
+    if "lounge" in m:
+        return handle_lounges(m)
+
+    if any(k in m for k in BAGGAGE_KEYWORDS):
+        return handle_baggage(m)
+
+    if any(k in m for k in CHECKIN_KEYWORDS):
+        return handle_checkin(m)
+
+    if any(k in m for k in SECURITY_KEYWORDS):
+        return handle_security(m)
+
+    for key, kws in ASSISTANCE_ALIASES.items():
+        if any(kw in m for kw in kws):
+            return handle_assistance(key)
+
+    if any(k in m for k in PARKING_GENERAL) or any(any(kw in m for kw in kws) for kws in PARKING_ALIASES.values()):
+        return handle_parking(m)
+
+    if any(k in m for k in DINING_KEYWORDS):
+        return handle_dining(m)
+
+    if any(k in m for k in BRING_KEYWORDS):
+        return can_bring(m)
+
+    for key, kws in FACILITY_ALIASES.items():
+        if any(kw in m for kw in kws):
+            return handle_facilities(key)
+
+    if any(k in m for k in ["transport", "how to get", "into london", "to central", "central london", "paddington", "from heathrow", "to heathrow"]) \
+            or any(any(kw in m for kw in kws) for kws in TRANSPORT_ALIASES.values()):
+        return handle_transport(m)
+
+    fn = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
+    if fn and any(k in m for k in ["flight", "status", "delay", "gate", "on time", "arriv", "depart"]):
+        return flight_status(fn.group(1) + fn.group(2))
+
+    for airline, info in AIRLINES.items():
+        if airline.lower() in m and any(k in m for k in ["terminal", "where", "check in", "gate"]):
+            return find_terminal(airline, info)
+
+    fuzzy_air = _fuzzy_find(m, list(AIRLINES.keys()))
+    if fuzzy_air and any(k in m for k in ["terminal", "where", "check in", "gate"]):
+        return find_terminal(fuzzy_air, AIRLINES[fuzzy_air])
+
+    if fn:
+        return flight_status(fn.group(1) + fn.group(2))
+
+    for airline, info in AIRLINES.items():
+        if airline.lower() in m:
+            return find_terminal(airline, info)
+
+    if fuzzy_air:
+        return find_terminal(fuzzy_air, AIRLINES[fuzzy_air])
+
+    return help_msg()
+
+
+def _ngrams(words, n):
+    return [" ".join(words[i:i + n]) for i in range(len(words) - n + 1)]
+
+
+def _fuzzy_find(m: str, candidates: list, cutoff: float = 0.78):
+    words = re.sub(r"[^\w\s]", " ", m).lower().split()
+    if not words:
+        return None
+    cl = [c.lower() for c in candidates]
+    for n in (3, 2, 1):
+        for ng in _ngrams(words, n):
+            if len(ng) < 3:
+                continue
+            matches = difflib.get_close_matches(ng, cl, n=1, cutoff=cutoff)
+            if matches:
+                return candidates[cl.index(matches[0])]
+    return None
+
+
+def _match_airline(m: str, source: dict):
+    for airline in source.keys():
+        if airline == "general_tips":
+            continue
+        if airline in m:
+            return airline
+    if " ba " in m:
+        return "british airways"
+    fuzzy = _fuzzy_find(m, [k for k in source.keys() if k != "general_tips"])
+    return fuzzy
+
+
+def _match_class(m: str):
+    for cls, kws in CABIN_CLASSES.items():
+        if any(kw in m for kw in kws):
+            return cls
+    return None
+
+
+def handle_baggage(m: str):
+    airline = _match_airline(m, BAGGAGE)
+    cls = _match_class(m)
+    if airline:
+        data = BAGGAGE[airline]
+        if cls and cls in data:
+            d = data[cls]
+            return (
+                f"**{airline.title()} — {cls.title()} class baggage**\n\n"
+                f"- **Cabin bag:** {d['cabin']}\n"
+                f"- **Personal item:** {d['personal']}\n"
+                f"- **Checked bag:** {d['checked']}\n"
+                f"- **Excess fee:** {d['excess']}"
+            )
+        d = data["economy"]
+        return (
+            f"**{airline.title()} — Economy baggage** (default)\n\n"
+            f"- **Cabin bag:** {d['cabin']}\n"
+            f"- **Personal item:** {d['personal']}\n"
+            f"- **Checked bag:** {d['checked']}\n"
+            f"- **Excess fee:** {d['excess']}\n\n"
+            f"For other classes, ask *'BA business baggage'* or *'BA first baggage'*."
+        )
+    return (
+        "**Baggage allowance lookup**\n\n"
+        "Tell me your airline and I'll look it up. I have data for: "
+        + ", ".join(a.title() for a in BAGGAGE.keys())
+        + ".\n\nExamples: *'BA economy baggage'*, *'Emirates business baggage'*, *'Lufthansa first baggage'*."
+    )
+
+
+def handle_checkin(m: str):
+    airline = _match_airline(m, CHECKIN)
+    if airline:
+        d = CHECKIN[airline]
+        return (
+            f"**{airline.title()} — check-in at Heathrow**\n\n"
+            f"- **Online check-in opens:** {d['online_opens_h']} hours before departure\n"
+            f"- **Bag drop opens:** {d['bag_drop_opens_h']} hours before departure\n"
+            f"- **Bag drop closes (short-haul):** {d['short_haul_close_min']} minutes before\n"
+            f"- **Bag drop closes (long-haul):** {d['long_haul_close_min']} minutes before\n\n"
+            f"{d['notes']}"
+        )
+    tips = "\n".join(f"- {t}" for t in CHECKIN["general_tips"])
+    return "**Check-in at Heathrow — general tips**\n\n" + tips + "\n\nAsk about a specific airline (e.g. *'BA check-in'* or *'Emirates check-in'*)."
+
+
+def handle_security(m: str):
+    t_match = re.search(r"\b(?:t|terminal)\s*([2345])\b", m)
+    if t_match:
+        t = t_match.group(1)
+        d = SECURITY["terminals"][t]
+        return (
+            f"**Security at Terminal {t}**\n\n"
+            f"- **Peak wait:** {d['peak_min']} minutes ({SECURITY['peak_hours']})\n"
+            f"- **Off-peak wait:** {d['off_peak_min']} minutes\n"
+            f"- **CT scanners:** {d['ct_scanner']}\n"
+            f"- **Fast Track:** {d['fast_track']}"
+        )
+    tips = "\n".join(f"- {t}" for t in SECURITY["general_tips"])
+    return (
+        "**Security at Heathrow — overview**\n\n"
+        f"**Peak hours:** {SECURITY['peak_hours']}\n\n"
+        "**Typical waits by terminal:**\n"
+        f"- T2: {SECURITY['terminals']['2']['peak_min']} min peak / {SECURITY['terminals']['2']['off_peak_min']} min off-peak\n"
+        f"- T3: {SECURITY['terminals']['3']['peak_min']} min peak / {SECURITY['terminals']['3']['off_peak_min']} min off-peak\n"
+        f"- T4: {SECURITY['terminals']['4']['peak_min']} min peak / {SECURITY['terminals']['4']['off_peak_min']} min off-peak\n"
+        f"- T5: {SECURITY['terminals']['5']['peak_min']} min peak / {SECURITY['terminals']['5']['off_peak_min']} min off-peak\n\n"
+        "**Tips:**\n" + tips +
+        "\n\nAsk about a specific terminal (e.g. *'security wait T5'*)."
+    )
+
+
+def handle_dining(m: str):
+    t_match = re.search(r"\b(?:t|terminal)\s*([2345])\b", m)
+    if t_match:
+        t = t_match.group(1)
+        d = DINING["terminals"][t]
+        out = [f"**Terminal {t} — food and shopping**\n"]
+        out.append("**Restaurants and cafes:**")
+        for r in d["restaurants"]:
+            out.append(f"- {r}")
+        out.append("\n**Shops and duty-free:**")
+        for s in d["shops"]:
+            out.append(f"- {s}")
+        out.append("")
+        out.append(f"*{DINING['hours_note']}*")
+        if "tax" in m or "vat" in m or "duty" in m:
+            out.append("")
+            out.append(DINING["tax_free_note"])
+        return "\n".join(out)
+    if "tax" in m or "vat" in m:
+        return "**Tax-free shopping at Heathrow**\n\n" + DINING["tax_free_note"]
+    summary = ["**Food and shopping at Heathrow — by terminal**\n"]
+    for t in ["2", "3", "4", "5"]:
+        d = DINING["terminals"][t]
+        names = ", ".join(r.split(" — ")[0] for r in d["restaurants"][:4])
+        summary.append(f"- **Terminal {t}:** {names}, and more.")
+    summary.append(f"\n*{DINING['hours_note']}*")
+    summary.append("\nAsk about a specific terminal (e.g. *'food in T3'* or *'shops in T5'*).")
+    return "\n".join(summary)
+
+
+def handle_assistance(key: str):
+    a = SPECIAL_ASSISTANCE[key]
+    return f"**{a['name']}**\n\n{a['info']}"
+
+
+def handle_parking(m: str):
+    for key, kws in PARKING_ALIASES.items():
+        if any(kw in m for kw in kws):
+            p = PARKING[key]
+            return f"**{p['name']}**\n\n{p['info']}"
+    tips = "\n".join(f"- {t}" for t in PARKING["general_tips"])
+    return (
+        "**Parking and drop-off at Heathrow — overview**\n\n"
+        "**Options:**\n"
+        "- **Short stay** — closest, expensive (from £8 / 30 min)\n"
+        "- **Long stay** — cheapest (from £26 / day, free shuttle)\n"
+        "- **Business parking (T5)** — meet-and-greet valet (~£75 / day)\n"
+        "- **Drop-off (Kiss & Fly)** — £6 for 10 min at the forecourt\n"
+        "- **Pickup** — use Long Stay (free up to 30 min) or Forecourt\n"
+        "- **Taxi / Uber** — designated rideshare pickup zones\n\n"
+        "**Tips:**\n" + tips +
+        "\n\nAsk about a specific option (e.g. *'long stay parking'*, *'drop-off charge'*, *'Uber pickup'*)."
+    )
+
+
+def flight_status(fn: str):
+    if not AVIA_KEY:
+        return f"Live flight lookup isn't configured. Please set `AVIATIONSTACK_KEY` in your `.env` file. (Flight {fn} could not be checked.)"
+    now = time.time()
+    hit = _cache.get(fn)
+    if hit and now - hit[0] < CACHE_TTL:
+        return hit[1] + "\n\n*(cached)*"
+    try:
+        r = requests.get(
+            "http://api.aviationstack.com/v1/flights",
+            params={"access_key": AVIA_KEY, "flight_iata": fn},
+            timeout=8,
+        )
+        body = r.json()
+        if body.get("error"):
+            return f"Sorry, the flight data service returned an error: *{body['error'].get('message', 'unknown error')}*"
+        d = body.get("data") or []
+        if not d:
+            return f"I couldn't find **{fn}** on today's schedule. Please double-check the flight number, or try again later."
+        f = d[0]
+        dep = f.get("departure") or {}
+        arr = f.get("arrival") or {}
+        sched = (dep.get("scheduled") or "")[11:16] or "?"
+        delay = dep.get("delay") or 0
+        out = (
+            f"**Flight {fn}** — {dep.get('iata','?')} to {arr.get('iata','?')}\n\n"
+            f"- **Status:** {(f.get('flight_status') or 'unknown').title()}\n"
+            f"- **Terminal:** {dep.get('terminal','?')}\n"
+            f"- **Gate:** {dep.get('gate','?')}\n"
+            f"- **Scheduled departure:** {sched}\n"
+            f"- **Delay:** {delay} min"
+        )
+        _cache[fn] = (now, out)
+        return out
+    except Exception as e:
+        return f"The flight data service is unavailable right now (`{e}`). Please try again shortly."
+
+
+def find_terminal(airline: str, info: dict):
+    t = info["terminal"]
+    walk = WALK.get(str(t), "?")
+    note = info.get("note", "")
+    note_part = f" {note}" if note and note != "." else ""
+    return (
+        f"**{airline}** flies from **Terminal {t}**.{note_part}\n\n"
+        f"- **Tube/Elizabeth line stop:** Heathrow Terminal {t}\n"
+        f"- **Walk to gate after security:** about {walk} minutes"
+    )
+
+
+def can_bring(m: str):
+    for item, rule in ITEMS.items():
+        if item in m:
+            return f"**{item.title()}**\n\n{rule}"
+    fuzzy = _fuzzy_find(m, list(ITEMS.keys()))
+    if fuzzy:
+        return f"**{fuzzy.title()}** *(closest match)*\n\n{ITEMS[fuzzy]}"
+    sample = ", ".join(list(ITEMS.keys())[:12])
+    return f"I don't have a rule for that item yet. Things I can check include: *{sample}*, and many more."
+
+
+def handle_transport(m: str):
+    for key, kws in TRANSPORT_ALIASES.items():
+        if any(kw in m for kw in kws):
+            t = TRANSPORT[key]
+            return (
+                f"**{t['name']}** to {t['to']}\n\n"
+                f"- **Journey time:** about {t['time_min']} minutes\n"
+                f"- **Frequency:** {t['frequency']}\n"
+                f"- **Cost:** {t['cost']}\n"
+                f"- **Where:** {t['where']}\n\n"
+                f"*{t['notes']}*"
+            )
+    lines = []
+    for o in TRANSPORT.values():
+        lines.append(f"- **{o['name']}** — about {o['time_min']} min, {o['cost']}")
+    return (
+        "**Transport options to and from Heathrow**\n\n"
+        + "\n".join(lines)
+        + "\n\nAsk about a specific option (e.g. *'Heathrow Express cost'* or *'tube to central'*) for full details."
+    )
+
+
+def handle_lounges(m: str):
+    t_match = re.search(r"\b(?:t|terminal)\s*([2345])\b", m)
+    if t_match:
+        t = t_match.group(1)
+        ls = LOUNGES.get(t, [])
+        if not ls:
+            return f"I don't have lounge information for Terminal {t}."
+        blocks = []
+        for l in ls:
+            blocks.append(
+                f"**{l['name']}**\n"
+                f"- **Access:** {l['access']}\n"
+                f"- **Hours:** {l['hours']}\n"
+                f"- **Location:** {l['location']}"
+            )
+        return f"**Lounges in Terminal {t}**\n\n" + "\n\n".join(blocks)
+    out = ["**Lounges by terminal at Heathrow**\n"]
+    for tid in ["2", "3", "4", "5"]:
+        names = ", ".join(l["name"] for l in LOUNGES[tid])
+        out.append(f"- **Terminal {tid}:** {names}")
+    return "\n".join(out) + "\n\nAsk about a specific terminal (e.g. *'lounges in T5'*) for access details."
+
+
+def handle_connections(m: str):
+    nums = re.findall(r"\b(?:t|terminal)\s*([2345])\b", m)
+    if len(nums) >= 2:
+        a, b = sorted({nums[0], nums[1]})
+        if a == b:
+            c = CONNECTIONS["same_terminal"]
+            return (
+                f"**Same-terminal connection (Terminal {a})**\n\n"
+                f"- **Minimum connection time:** {c['mct_min']} minutes\n\n"
+                f"{c['method']}\n\n*{c['notes']}*"
+            )
+        key = f"T{a}-T{b}"
+        c = CONNECTIONS.get(key)
+        if c:
+            return (
+                f"**Connection from Terminal {a} to Terminal {b}**\n\n"
+                f"- **Minimum connection time:** {c['mct_min']} minutes\n\n"
+                f"{c['method']}\n\n*{c['notes']}*"
+            )
+    if "same" in m or "within" in m:
+        c = CONNECTIONS["same_terminal"]
+        return (
+            f"**Same-terminal connection**\n\n"
+            f"- **Minimum connection time:** {c['mct_min']} minutes\n\n"
+            f"{c['method']}\n\n*{c['notes']}*"
+        )
+    tips = "\n".join(f"- {t}" for t in CONNECTIONS["general_tips"])
+    return (
+        "**Minimum connection times at Heathrow**\n\n"
+        "- **Same terminal:** 60 minutes\n"
+        "- **T2 to/from T3:** 75 minutes (walking link)\n"
+        "- **T2 to/from T4:** 120 minutes\n"
+        "- **T2 to/from T5:** 90 minutes\n"
+        "- **T3 to/from T4:** 120 minutes\n"
+        "- **T3 to/from T5:** 90 minutes\n"
+        "- **T4 to/from T5:** 90 minutes\n\n"
+        "**Tips:**\n" + tips +
+        "\n\nAsk about a specific pair, for example: *'T3 to T5 connection'*."
+    )
+
+
+def handle_facilities(key: str):
+    f = FACILITIES[key]
+    return f"**{f['name']}**\n\n{f['info']}"
+
+
+def help_msg():
+    return (
+        "**Hi! I'm Heathrow Helper.** Here's what I can do:\n\n"
+        "**Before you fly**\n"
+        "- **Baggage allowance** — *'BA economy baggage'*\n"
+        "- **Check-in deadlines** — *'when does BA check-in close'*\n"
+        "- **What can I bring?** — *'can I bring a vape'*\n"
+        "- **Special assistance** — *'wheelchair assistance'* or *'sunflower lanyard'*\n\n"
+        "**Getting around the airport**\n"
+        "- **Live flight status** — *'BA7053 status'*\n"
+        "- **Terminal lookup** — *'Lufthansa terminal'*\n"
+        "- **Security wait + fast-track** — *'security wait T5'*\n"
+        "- **Connecting flights** — *'T3 to T5 connection'*\n\n"
+        "**Inside the terminal**\n"
+        "- **Lounges** — *'lounges in T5'*\n"
+        "- **Food, shops, duty-free** — *'food in T3'*\n"
+        "- **Airport facilities** — *'where is the prayer room'*\n\n"
+        "**Getting there**\n"
+        "- **Transport to/from LHR** — *'Heathrow Express cost'*\n"
+        "- **Parking + drop-off** — *'long stay parking'* or *'drop-off charge'*"
+    )

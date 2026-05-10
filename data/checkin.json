@@ -1,0 +1,21 @@
+{
+  "british airways": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 45, "long_haul_close_min": 60, "notes": "Self-service kiosks at T5. Bag drop closes 45 minutes before short-haul, 60 minutes before long-haul departures."},
+  "lufthansa": {"online_opens_h": 23, "bag_drop_opens_h": 3, "short_haul_close_min": 45, "long_haul_close_min": 60, "notes": "Online check-in opens 23 hours before. Self-service kiosks at T2."},
+  "emirates": {"online_opens_h": 48, "bag_drop_opens_h": 4, "short_haul_close_min": 60, "long_haul_close_min": 60, "notes": "Online check-in opens 48 hours before. Bag drop at T3 closes 60 minutes before. Long lines for First Class are common; arrive early."},
+  "delta": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 45, "long_haul_close_min": 60, "notes": "Joint check-in with Virgin Atlantic at T3. Many kiosks; bag drop closes 60 minutes before transatlantic."},
+  "american airlines": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 45, "long_haul_close_min": 60, "notes": "Check-in at T3, premium cabins use Flagship Check-In. Bag drop closes 60 minutes before transatlantic."},
+  "united": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 45, "long_haul_close_min": 60, "notes": "Check-in at T2. Bag drop closes 60 minutes before departure for transatlantic flights."},
+  "virgin atlantic": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 60, "long_haul_close_min": 60, "notes": "Check-in at T3. Upper Class has dedicated wing. Bag drop closes 60 minutes before."},
+  "klm": {"online_opens_h": 30, "bag_drop_opens_h": 3, "short_haul_close_min": 40, "long_haul_close_min": 60, "notes": "Online check-in opens 30 hours before. T4 check-in. Bag drop closes 40 minutes before short-haul."},
+  "air france": {"online_opens_h": 30, "bag_drop_opens_h": 3, "short_haul_close_min": 40, "long_haul_close_min": 60, "notes": "Online check-in opens 30 hours before. T4 check-in. Bag drop closes 40 minutes before short-haul."},
+  "qantas": {"online_opens_h": 24, "bag_drop_opens_h": 4, "short_haul_close_min": 60, "long_haul_close_min": 60, "notes": "Check-in at T3. Bag drop closes 60 minutes before international flights."},
+  "singapore airlines": {"online_opens_h": 48, "bag_drop_opens_h": 3, "short_haul_close_min": 60, "long_haul_close_min": 60, "notes": "Online check-in opens 48 hours before. T2 check-in. Bag drop closes 60 minutes before."},
+  "qatar": {"online_opens_h": 48, "bag_drop_opens_h": 3, "short_haul_close_min": 60, "long_haul_close_min": 60, "notes": "Online check-in opens 48 hours before. T3 check-in. Bag drop closes 60 minutes before."},
+  "general_tips": [
+    "Online check-in is fastest. Most airlines open it 24-48 hours before departure.",
+    "If you only have hand luggage, you can usually go straight to security after online check-in.",
+    "If you need to drop a bag, allow at least 90 minutes for short-haul and 2 hours for long-haul.",
+    "Self-service kiosks are available in every Heathrow terminal — use them to print your boarding pass and bag tags.",
+    "Premium cabins and elite frequent flyers usually have dedicated check-in desks with shorter queues."
+  ]
+}

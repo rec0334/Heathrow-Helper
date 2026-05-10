@@ -1,0 +1,30 @@
+{
+  "2": [
+    {"name": "Plaza Premium Lounge", "access": "Pay-per-use, Priority Pass, LoungeKey", "hours": "05:00-22:00", "location": "After security, central"},
+    {"name": "United Polaris Lounge", "access": "United/Star Alliance Business and First", "hours": "08:00-21:00", "location": "After security, satellite"},
+    {"name": "Lufthansa Senator & Business Lounge", "access": "Star Alliance Gold, Lufthansa Business", "hours": "05:30-21:30", "location": "After security, near gates"},
+    {"name": "Air Canada Maple Leaf Lounge", "access": "Star Alliance Gold, Air Canada Business", "hours": "07:00-22:00", "location": "After security"},
+    {"name": "Singapore Airlines SilverKris Lounge", "access": "SQ Business and First, Star Alliance Gold", "hours": "Aligned with SQ flights", "location": "After security"}
+  ],
+  "3": [
+    {"name": "American Airlines Flagship Lounge", "access": "AA/oneworld First and Business", "hours": "05:00-22:00", "location": "After security"},
+    {"name": "Cathay Pacific First & Business Lounge", "access": "Cathay First/Business, oneworld Emerald/Sapphire", "hours": "05:00-22:00", "location": "After security"},
+    {"name": "Emirates Lounge", "access": "Emirates Business and First, Skywards Gold", "hours": "Aligned with EK flights", "location": "After security"},
+    {"name": "Qantas First Lounge", "access": "Qantas First, oneworld Emerald", "hours": "Aligned with QF flights", "location": "After security"},
+    {"name": "Virgin Atlantic Clubhouse", "access": "Virgin Upper Class, Flying Club Gold", "hours": "05:00-22:00", "location": "After security"},
+    {"name": "No1 Lounge", "access": "Pay-per-use, Priority Pass, LoungeKey", "hours": "05:00-22:00", "location": "After security"},
+    {"name": "Plaza Premium Lounge", "access": "Pay-per-use, Priority Pass", "hours": "05:00-22:00", "location": "After security"}
+  ],
+  "4": [
+    {"name": "SkyTeam Lounge", "access": "SkyTeam Elite Plus, Business class", "hours": "05:30-22:30", "location": "After security"},
+    {"name": "KLM Crown Lounge", "access": "KLM/AF Business, SkyTeam Elite Plus", "hours": "Aligned with KL/AF flights", "location": "After security"},
+    {"name": "Etihad Premium Lounge", "access": "Etihad Business, First, Apartments", "hours": "Aligned with EY flights", "location": "After security"},
+    {"name": "Plaza Premium Lounge", "access": "Pay-per-use, Priority Pass", "hours": "05:00-22:00", "location": "After security"}
+  ],
+  "5": [
+    {"name": "BA Concorde Room", "access": "British Airways First class only", "hours": "05:00-22:00", "location": "T5A, after security"},
+    {"name": "BA Galleries First", "access": "BA First, oneworld Emerald", "hours": "05:00-22:00", "location": "T5A and T5B"},
+    {"name": "BA Galleries Club", "access": "BA Club Europe/World, oneworld Sapphire", "hours": "05:00-22:00", "location": "T5A and T5B"},
+    {"name": "Aspire Lounge", "access": "Pay-per-use, Priority Pass, LoungeKey", "hours": "05:00-22:00", "location": "T5A, after security"}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "terminals": {
+    "2": {"peak_min": "20-30", "off_peak_min": "10-15", "ct_scanner": "Rolling out — most lanes still ask you to remove laptops and liquids.", "fast_track": "Available. Free for Star Alliance Gold/business class. Otherwise pay for Heathrow Fast Track from £8 (book online)."},
+    "3": {"peak_min": "25-35", "off_peak_min": "10-15", "ct_scanner": "Some lanes have new CT scanners — you can leave laptops and liquids in your bag in those lanes only.", "fast_track": "Available. Free for oneworld Emerald/Sapphire and premium cabins. Pay £8+ for Heathrow Fast Track."},
+    "4": {"peak_min": "20-30", "off_peak_min": "10-15", "ct_scanner": "Mostly older scanners — remove laptops and liquids.", "fast_track": "Available. Free for SkyTeam Elite Plus and premium cabins. Pay £8+ for Heathrow Fast Track."},
+    "5": {"peak_min": "25-40", "off_peak_min": "15-20", "ct_scanner": "Some lanes have CT scanners — leave laptops and liquids in your bag in those lanes only. Listen to staff direction.", "fast_track": "Available. Free for BA First/Club passengers and oneworld Emerald/Sapphire. Pay £8+ for Heathrow Fast Track."}
+  },
+  "peak_hours": "Roughly 06:00-09:00 and 16:00-20:00 daily. Avoid these if you can.",
+  "general_tips": [
+    "Allow at least 60 minutes from terminal entry to gate, even off-peak.",
+    "All liquids in carry-on must be in containers of 100 ml or less (UK rule still in force at most lanes).",
+    "Where new CT scanners are deployed, you can leave laptops, tablets, and liquids in your bag — but only in those lanes; staff will direct you.",
+    "Heathrow Fast Track passes can be booked online from about £8 per person.",
+    "Premium cabins and frequent flyer status (Emerald, Gold, Elite Plus) usually include free Fast Track."
+  ]
+}

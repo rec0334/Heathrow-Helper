@@ -1,0 +1,33 @@
+{
+  "short stay": {
+    "name": "Short stay parking",
+    "info": "Closest parking to each terminal, ideal for stays of up to 4 hours.\n\n**Where:** Multi-storey car park next to T2, T3, T4 and T5.\n\n**Cost:** From about **£8 for 30 minutes**, **£16 for 1-2 hours**, **£40 for 4 hours**. Daily rate from about £75.\n\n**Best for:** Picking up arrivals or very short stays. Expensive for longer."
+  },
+  "long stay": {
+    "name": "Long stay parking",
+    "info": "Cheapest official Heathrow parking, with a free shuttle bus to the terminals (5-15 minutes).\n\n**Where:** Long stay car parks at all terminals (signposted from the M25/M4).\n\n**Cost:** From about **£26 per day** if booked online in advance. Walk-up rates are higher.\n\n**Best for:** Trips of 1 day or more. Always book online ahead — it is much cheaper."
+  },
+  "business": {
+    "name": "Business parking",
+    "info": "Heathrow Business Parking offers a meet-and-greet service: drop your car at the terminal, a valet drives it away, and you collect on return at the kerb.\n\n**Where:** Terminal 5 only.\n\n**Cost:** About **£75 per day** (varies). Book online for best rates.\n\n**Best for:** Premium customers who want to skip the shuttle bus."
+  },
+  "drop-off": {
+    "name": "Drop-off (Kiss and Fly) charge",
+    "info": "Since November 2021, Heathrow charges every vehicle that uses the **Forecourt Drop-Off** zones (the bays right outside each terminal entrance).\n\n**Cost:** **£6 for up to 10 minutes**, **£12 if you stay longer**. Pay online at heathrow.com/dropoff within 24 hours of dropping off — number plate is read by camera.\n\n**Free alternative:** Use the **Long Stay Car Parks** — drop-off and pick-up are free if you stay under 30 minutes, then take the free shuttle to the terminal."
+  },
+  "pickup": {
+    "name": "Picking up arrivals",
+    "info": "**Cheapest:** Park in the **Long Stay car park** (free for up to 30 minutes when picking up) and meet your passenger at the terminal arrivals hall, or use the shuttle bus.\n\n**Closest but charged:** The **Forecourt Drop-Off zone** (£6 / 10 min) right outside each terminal.\n\n**Tip:** Track the flight before you leave — most flights take 30-60 minutes from landing to arrivals hall (passport, baggage, customs)."
+  },
+  "taxi rank": {
+    "name": "Taxi and Uber pick-up zones",
+    "info": "**Black taxis:** Ranks are directly outside every terminal arrivals hall. No booking needed. Card payment accepted.\n\n**Uber, Bolt, FreeNow, minicabs:** Use the **designated rideshare pickup zones** at each terminal — these are short-stay car parks (Level 1 or 2 of the multi-storey). Your driver will direct you in the app.\n\n**Note:** Drivers cannot pick you up at the kerbside outside the terminal."
+  },
+  "general_tips": [
+    "Always book online in advance — walk-up parking rates are 30-50% higher.",
+    "Long Stay is the best value for any trip longer than half a day.",
+    "Free shuttle buses run every 10-15 minutes from Long Stay to the terminals.",
+    "If you're being dropped off, ask the driver to use the Long Stay car park to avoid the £6 forecourt charge.",
+    "Disabled (Blue Badge) holders get reduced rates — register your badge with Heathrow before travel."
+  ]
+}

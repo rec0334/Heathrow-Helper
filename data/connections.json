@@ -1,0 +1,43 @@
+{
+  "same_terminal": {
+    "mct_min": 60,
+    "method": "Stay airside. Follow signs to your departure gate. Allow extra time if you need a passport check on arrival.",
+    "notes": "Same-terminal connections are the simplest. 45 min may be possible for some short-haul-to-short-haul transfers, but 60 min is the safe minimum."
+  },
+  "T2-T3": {
+    "mct_min": 75,
+    "method": "Walking link between Terminal 2 and Terminal 3 (about 10 minutes via the underground walkway).",
+    "notes": "T2 and T3 are physically very close. No transit train needed."
+  },
+  "T2-T4": {
+    "mct_min": 120,
+    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between terminals. Allow 15-20 minutes for the transit.",
+    "notes": "Furthest pairing. Build in plenty of buffer."
+  },
+  "T2-T5": {
+    "mct_min": 90,
+    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
+    "notes": "Common BA connection if your inbound was a Star Alliance flight to T2."
+  },
+  "T3-T4": {
+    "mct_min": 120,
+    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central and T4. Transit is about 10-15 minutes.",
+    "notes": "Frequent transfer for SkyTeam connections."
+  },
+  "T3-T5": {
+    "mct_min": 90,
+    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
+    "notes": "BA codeshares often connect this way."
+  },
+  "T4-T5": {
+    "mct_min": 90,
+    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between T4 and T5. Transit is about 5-10 minutes.",
+    "notes": "Allow time — you'll need to clear security again at T5."
+  },
+  "general_tips": [
+    "Free transfer trains (Heathrow Express or Elizabeth line) connect all terminals airside-to-airside if you're transit-only.",
+    "If you cleared immigration on arrival you'll need to re-enter the airside zone, which means another security screening.",
+    "Heathrow's official Minimum Connection Time is the bare minimum. For peace of mind, add 30 minutes.",
+    "If your bag is checked through, you generally don't need to collect it between flights — confirm with the airline."
+  ]
+}

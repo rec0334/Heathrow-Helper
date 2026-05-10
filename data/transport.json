@@ -1,0 +1,56 @@
+{
+  "heathrow express": {
+    "name": "Heathrow Express",
+    "to": "London Paddington",
+    "time_min": 15,
+    "frequency": "Every 15 minutes",
+    "cost": "From £25 standard, £32 business (cheaper if booked 90 days ahead)",
+    "where": "T2/T3 station (Central) and T5 station. No T4 stop — use free transit train from T4.",
+    "notes": "Fastest option to central London. No stops."
+  },
+  "elizabeth line": {
+    "name": "Elizabeth line",
+    "to": "London Paddington (then central London)",
+    "time_min": 32,
+    "frequency": "Every 5-10 minutes",
+    "cost": "About £12-15 with contactless / Oyster (off-peak cheaper)",
+    "where": "T2/T3 station, T4 station, T5 station",
+    "notes": "Best value for speed. Stops at Hayes, Ealing Broadway, Paddington, Bond Street, Liverpool Street, Canary Wharf."
+  },
+  "tube": {
+    "name": "Piccadilly line (Underground)",
+    "to": "Central London (Knightsbridge, Piccadilly Circus, King's Cross)",
+    "time_min": 50,
+    "frequency": "Every 5-10 minutes",
+    "cost": "About £6.30 with contactless / Oyster (daily cap applies)",
+    "where": "T2/T3 station, T4 station, T5 station",
+    "notes": "Cheapest direct rail option. Slower than Elizabeth line but goes deeper into central London."
+  },
+  "bus": {
+    "name": "National Express coach",
+    "to": "London Victoria Coach Station",
+    "time_min": 75,
+    "frequency": "Every 30-60 minutes",
+    "cost": "From £6 to £12 if booked ahead",
+    "where": "Heathrow Central Bus Station (between T2 and T3), and T5",
+    "notes": "Cheapest option but slowest. Good for luggage."
+  },
+  "taxi": {
+    "name": "Black taxi",
+    "to": "Central London",
+    "time_min": 60,
+    "frequency": "Always available at ranks",
+    "cost": "About £60-100 depending on traffic and destination",
+    "where": "Taxi ranks outside every terminal",
+    "notes": "Metered, no booking needed. Can take credit cards."
+  },
+  "uber": {
+    "name": "Uber / Bolt / minicab",
+    "to": "Anywhere in London",
+    "time_min": 60,
+    "frequency": "On demand via app",
+    "cost": "About £35-70 depending on traffic and surge",
+    "where": "Designated rideshare pickup zones at each terminal (signposted)",
+    "notes": "Often cheaper than black taxis. Pickup zone may be a short walk from arrivals."
+  }
+}

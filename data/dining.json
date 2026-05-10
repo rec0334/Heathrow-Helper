@@ -1,0 +1,69 @@
+{
+  "terminals": {
+    "2": {
+      "restaurants": [
+        "The Perfectionists' Café (Heston Blumenthal) — fish and chips, burgers",
+        "Wagamama — Asian noodles and ramen",
+        "Pret A Manger — sandwiches, salads, coffee",
+        "Itsu — sushi and Asian street food",
+        "Caviar House & Prunier — seafood bar, champagne",
+        "Comptoir Libanais — Lebanese mezze",
+        "Pilots Bar & Kitchen — full menu, all-day"
+      ],
+      "shops": [
+        "World Duty Free — perfume, alcohol, tobacco, sweets",
+        "John Lewis — gifts, electronics",
+        "WHSmith — books, magazines, travel essentials",
+        "Boots — pharmacy and travel essentials"
+      ]
+    },
+    "3": {
+      "restaurants": [
+        "Plane Food (Gordon Ramsay) — gastropub-style menu",
+        "Wondertree — modern British, all-day",
+        "Caviar House & Prunier — seafood and champagne bar",
+        "Itsu — sushi and Asian street food",
+        "Pret A Manger — sandwiches and coffee",
+        "The Tin Goose — pub-style food and drinks"
+      ],
+      "shops": [
+        "World Duty Free — flagship store, large alcohol and perfume range",
+        "Harrods — luxury British retail",
+        "Burberry, Gucci, Tiffany & Co — luxury fashion and jewellery",
+        "WHSmith, Boots — travel essentials"
+      ]
+    },
+    "4": {
+      "restaurants": [
+        "Wagamama — Asian noodles and ramen",
+        "Frankie & Benny's — American/Italian classics",
+        "Pret A Manger — sandwiches and coffee",
+        "Itsu — sushi and Asian street food"
+      ],
+      "shops": [
+        "World Duty Free — perfume, alcohol, tobacco",
+        "WHSmith, Boots — travel essentials"
+      ]
+    },
+    "5": {
+      "restaurants": [
+        "Plane Food (Gordon Ramsay) — fine dining gastropub",
+        "Caviar House & Prunier — seafood and champagne",
+        "Wondertree — modern British, all-day",
+        "Wagamama — Asian noodles and ramen",
+        "The Tin Goose — pub-style food and drinks",
+        "Yo! Sushi — conveyor-belt sushi",
+        "Pret A Manger, Itsu, Leon — quick options"
+      ],
+      "shops": [
+        "World Duty Free — biggest store at Heathrow",
+        "Harrods — flagship airport branch",
+        "Burberry, Cartier, Tiffany & Co, Bulgari — luxury fashion and jewellery",
+        "Smythson, Mulberry, Hermes — leather goods",
+        "WHSmith, Boots — travel essentials"
+      ]
+    }
+  },
+  "tax_free_note": "Important: since January 2021 the UK has ended VAT-free shopping for departing passengers. You no longer get a VAT refund on items bought in the UK. However, 'duty-free' alcohol and tobacco prices still apply if you're flying outside the UK (these have separate excise duty exemptions).",
+  "hours_note": "Most restaurants and shops at Heathrow open from 04:30 or 05:00 and close around 22:00. Some 24-hour options are available at T5."
+}

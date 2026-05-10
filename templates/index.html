@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Heathrow Helper — Your Airport Companion</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --lhr-red: #d22730;
+      --lhr-red-dark: #a81d24;
+      --lhr-navy: #0c1d3a;
+      --lhr-navy-2: #142a52;
+      --lhr-blue: #1e3a6e;
+      --lhr-blue-soft: #2a4a8a;
+      --lhr-cream: #f7f3ec;
+      --text: #1a2235;
+      --text-soft: #4b5670;
+      --line: #e5e7ec;
+      --bot-bg: #f4f6fa;
+      --user-bg: linear-gradient(135deg, #1e3a6e, #2a4a8a);
+      --shadow-sm: 0 1px 2px rgba(12,29,58,0.06), 0 1px 3px rgba(12,29,58,0.04);
+      --shadow-md: 0 4px 12px rgba(12,29,58,0.08), 0 2px 6px rgba(12,29,58,0.05);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--lhr-cream);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* HEADER ============================================ */
+    header {
+      background: linear-gradient(180deg, var(--lhr-navy), var(--lhr-navy-2));
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      z-index: 5;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--lhr-red) 0 30%, #c9a96e 30% 60%, var(--lhr-blue-soft) 60% 100%);
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: var(--lhr-red);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 6px rgba(210,39,48,0.4);
+    }
+    .brand { display: flex; flex-direction: column; }
+    .brand h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 0.2px; }
+    .brand .tag { font-size: 11px; color: #8da0c7; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 2px; }
+    .header-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #a8b8d8; }
+    .dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px #4ade80; animation: blink 2s infinite; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* CHIPS ============================================= */
+    .chip-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .chip-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      background: var(--lhr-cream);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .chip:hover { background: var(--lhr-navy); color: #fff; border-color: var(--lhr-navy); transform: translateY(-1px); }
+    .chip:active { transform: translateY(0); }
+
+    /* CHAT ============================================== */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 16px;
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .msg-row { display: flex; margin-bottom: 14px; animation: fade-in 0.3s ease both; }
+    .msg-row.user { justify-content: flex-end; }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      margin-right: 10px;
+    }
+    .avatar.bot { background: var(--lhr-red); color: #fff; }
+    .msg {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 15px;
+      line-height: 1.5;
+      box-shadow: var(--shadow-sm);
+    }
+    .msg.bot {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-top-left-radius: 4px;
+    }
+    .msg.user {
+      background: var(--user-bg);
+      color: #fff;
+      border-top-right-radius: 4px;
+    }
+    .msg p { margin: 0 0 8px 0; }
+    .msg p:last-child { margin-bottom: 0; }
+    .msg ul, .msg ol { margin: 6px 0 8px 0; padding-left: 22px; }
+    .msg li { margin-bottom: 4px; }
+    .msg strong { color: var(--lhr-navy); font-weight: 600; }
+    .msg.user strong { color: #fff; }
+    .msg em { color: var(--text-soft); font-style: normal; font-size: 13px; }
+    .msg.user em { color: #d8e3f5; }
+    .msg code {
+      background: var(--lhr-cream);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'SF Mono', Menlo, Consolas, monospace;
+    }
+    .msg.user code { background: rgba(255,255,255,0.18); }
+    .msg a { color: var(--lhr-red); text-decoration: underline; }
+
+    /* TYPING INDICATOR =================================== */
+    .typing-row { display: flex; align-items: center; margin-bottom: 14px; animation: fade-in 0.2s ease; }
+    .typing {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      border-top-left-radius: 4px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+    .typing span {
+      width: 7px; height: 7px;
+      background: var(--lhr-blue-soft);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* FORM =============================================== */
+    .input-area {
+      background: #fff;
+      border-top: 1px solid var(--line);
+      padding: 14px;
+      box-shadow: 0 -2px 8px rgba(12,29,58,0.04);
+    }
+    form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    input[type=text] {
+      flex: 1;
+      padding: 13px 18px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: 15px;
+      background: var(--lhr-cream);
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    input[type=text]::placeholder { color: var(--text-soft); }
+    input[type=text]:focus { border-color: var(--lhr-blue-soft); background: #fff; }
+
+    button {
+      padding: 12px 22px;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button.primary { background: var(--lhr-red); color: #fff; }
+    button.primary:hover { background: var(--lhr-red-dark); }
+    button.primary:active { transform: scale(0.97); }
+    #mic {
+      background: #fff;
+      border: 1px solid var(--line);
+      width: 46px; height: 46px;
+      padding: 0;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    #mic:hover { background: var(--lhr-cream); border-color: var(--lhr-blue-soft); }
+    #mic.live { background: var(--lhr-red); border-color: var(--lhr-red); color: #fff; animation: pulse-mic 1s infinite; }
+    @keyframes pulse-mic {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(210,39,48,0.6); }
+      50% { box-shadow: 0 0 0 10px rgba(210,39,48,0); }
+    }
+
+    /* FOOTER ============================================= */
+    footer {
+      background: #fff;
+      border-top: 1px solid var(--line);
+      padding: 8px 16px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-soft);
+      line-height: 1.4;
+    }
+    footer strong { color: var(--text); }
+
+    /* MOBILE ============================================= */
+    @media (max-width: 600px) {
+      .msg { max-width: 88%; }
+      .brand h1 { font-size: 15px; }
+      header { padding: 12px 16px; }
+      .header-status { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">LHR</div>
+    <div class="brand">
+      <h1>Heathrow Helper</h1>
+      <div class="tag">Your Airport Companion</div>
+    </div>
+    <div class="header-status"><span class="dot"></span> Online</div>
+  </header>
+
+  <div class="chip-bar" id="chips">
+    <button class="chip" data-q="My flight status">✈️ Flight status</button>
+    <button class="chip" data-q="Lounges in T5">🛋️ Lounges</button>
+    <button class="chip" data-q="Security wait T5">🔒 Security wait</button>
+    <button class="chip" data-q="BA economy baggage">🧳 Baggage allowance</button>
+    <button class="chip" data-q="BA check-in">⏰ Check-in times</button>
+    <button class="chip" data-q="Heathrow Express cost">🚆 Transport</button>
+    <button class="chip" data-q="What can I bring on the plane">📦 What can I bring</button>
+    <button class="chip" data-q="Wheelchair assistance">♿ Special assistance</button>
+    <button class="chip" data-q="Long stay parking">🅿️ Parking</button>
+    <button class="chip" data-q="Where is the prayer room">📍 Facilities</button>
+  </div>
+
+  <div id="chat"></div>
+
+  <div class="input-area">
+    <form id="f">
+      <input id="m" type="text" placeholder="Ask anything about your Heathrow journey…" autocomplete="off" autofocus>
+      <button id="mic" type="button" title="Voice input">🎤</button>
+      <button class="primary">Send</button>
+    </form>
+  </div>
+
+  <footer>
+    <strong>Heathrow Helper</strong> is an unofficial assistant. Information is a guide only — always confirm with your airline. Live flight data via AviationStack. <span id="lang-status"></span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+  <script>
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('f');
+    const input = document.getElementById('m');
+    const mic = document.getElementById('mic');
+    const chips = document.getElementById('chips');
+
+    if (typeof marked !== 'undefined') {
+      marked.setOptions({ breaks: true, gfm: true });
+    }
+
+    function renderMarkdown(text) {
+      if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+        return document.createTextNode(text).textContent;
+      }
+      const html = marked.parse(text);
+      return DOMPurify.sanitize(html);
+    }
+
+    function addBot(text) {
+      const row = document.createElement('div');
+      row.className = 'msg-row bot';
+      row.innerHTML = `<div class="avatar bot">H</div><div class="msg bot"></div>`;
+      row.querySelector('.msg').innerHTML = renderMarkdown(text);
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function addUser(text) {
+      const row = document.createElement('div');
+      row.className = 'msg-row user';
+      row.innerHTML = `<div class="msg user"></div>`;
+      row.querySelector('.msg').textContent = text;
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'typing-row';
+      row.id = 'typing';
+      row.innerHTML = `<div class="avatar bot">H</div><div class="typing"><span></span><span></span><span></span></div>`;
+      chat.appendChild(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function hideTyping() {
+      const t = document.getElementById('typing');
+      if (t) t.remove();
+    }
+
+    addBot("**Hi! I'm Heathrow Helper.** 👋\n\nI can help with:\n- Flight status, terminals and gates\n- Baggage rules and check-in deadlines\n- Security wait times and fast-track\n- Lounges, food and shopping\n- Transport, parking and drop-off\n- Special assistance for accessibility needs\n\n*Tap a quick-reply chip above, type a question, or use the 🎤 to speak.*");
+
+    async function send(text) {
+      addUser(text);
+      input.value = '';
+      showTyping();
+      try {
+        const r = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const j = await r.json();
+        await new Promise(res => setTimeout(res, 400));
+        hideTyping();
+        addBot(j.reply);
+      } catch (err) {
+        hideTyping();
+        addBot("Sorry, I couldn't reach the server. Please try again in a moment.");
+      }
+    }
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (text) send(text);
+    };
+
+    chips.addEventListener('click', (e) => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      const q = chip.dataset.q;
+      send(q);
+    });
+
+    // Voice
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      mic.disabled = true;
+      mic.title = 'Voice input is not supported in this browser';
+      mic.style.opacity = 0.4;
+    } else {
+      const rec = new SR();
+      rec.lang = navigator.language || 'en-GB';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      let live = false;
+      mic.onclick = () => {
+        if (live) { rec.stop(); return; }
+        try { rec.start(); } catch (e) {}
+      };
+      rec.onstart = () => { live = true; mic.classList.add('live'); };
+      rec.onend = () => { live = false; mic.classList.remove('live'); };
+      rec.onerror = (e) => {
+        live = false;
+        mic.classList.remove('live');
+        if (e.error === 'not-allowed') addBot('Microphone permission was denied. Please allow it in your browser settings.');
+        else if (e.error === 'no-speech') addBot("I didn't catch that. Please try again.");
+      };
+      rec.onresult = (e) => {
+        const text = e.results[0][0].transcript.trim();
+        if (text) send(text);
+      };
+    }
+
+    document.getElementById('lang-status').textContent = `Detected interface language: ${navigator.language || 'en'}`;
+  </script>
+</body>
+</html>

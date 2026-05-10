@@ -1,0 +1,30 @@
+{
+  "wheelchair": {
+    "name": "Wheelchair and reduced-mobility assistance",
+    "info": "Heathrow's Special Assistance service is free for any passenger who needs help moving through the airport. The service is run by Wilson James (formerly OCS).\n\n**How to book:** Tell your airline at least 48 hours before your flight. They pass it to Heathrow.\n\n**On the day:** Use the dedicated assistance call points at the entrance to each terminal, or go to the airline check-in desk.\n\n**What you get:** Help from terminal entry to the aircraft seat (or vice versa on arrival), priority through security, escorted transfer between flights."
+  },
+  "hidden disability": {
+    "name": "Hidden disabilities and the Sunflower Lanyard",
+    "info": "Heathrow uses the **Sunflower Lanyard** scheme to identify passengers with non-visible disabilities (autism, dementia, anxiety, hearing loss, etc.).\n\n**How to get one:** Free, no proof needed. Pick up from any information desk in any terminal, or order online from heathrow.com before you travel.\n\n**What it does:** Staff are trained to recognise the lanyard and offer extra time, quieter routes, and clearer communication. It does not give priority but it signals that the wearer may need patience or support."
+  },
+  "unaccompanied minor": {
+    "name": "Unaccompanied minors (children flying alone)",
+    "info": "Each airline runs its own unaccompanied minor (UM) service.\n\n**Booking:** Must be arranged directly with the airline at the time of booking. Most airlines charge a fee (often £50-100 each way).\n\n**Age range:** Usually 5-11 years for compulsory UM service, optional for 12-17.\n\n**On the day:** Bring photo ID, the airline's UM form, and the contact details of the adult collecting the child. The child is escorted from check-in through to the aircraft, and met at the destination by the airline."
+  },
+  "visual impairment": {
+    "name": "Blind and visually impaired passengers",
+    "info": "Special Assistance covers blind and partially sighted passengers. Guide dogs are welcome at all terminals — they are not classed as pets.\n\n**Booking:** Arrange with your airline at least 48 hours before travel.\n\n**At the airport:** Audio induction loops are available at every information desk. Tactile signage and braille floor numbers are provided in lifts. Staff can read information aloud and guide you to the gate."
+  },
+  "hearing impairment": {
+    "name": "Deaf and hard-of-hearing passengers",
+    "info": "All terminals have **induction loops** at information desks, gate desks, and customer service counters.\n\n**Visual flight information** is shown on every screen. Boarding announcements are also displayed at the gate.\n\n**British Sign Language (BSL):** Free BSL interpreter service is available on request — book through your airline at least 48 hours before."
+  },
+  "autism": {
+    "name": "Passengers with autism or sensory needs",
+    "info": "Heathrow has a **Sensory Room** at Terminal 3 (after security, near gate 25). It is a quiet, low-stimulation space for passengers who find busy environments overwhelming.\n\n**Familiarisation visits:** Heathrow offers free pre-travel visits for passengers with autism so they can practise the journey through the airport. Book via heathrow.com/special-assistance.\n\n**Sunflower Lanyard:** Recommended (free at information desks)."
+  },
+  "service animal": {
+    "name": "Service animals and assistance dogs",
+    "info": "Recognised assistance dogs (guide dogs, hearing dogs, medical alert dogs) travel free and stay with their handler at all times.\n\n**Booking:** Tell your airline when you book. Some destinations require Pet Travel Scheme paperwork — check before travel.\n\n**On site:** Pet relief areas are available outside every terminal (signposted)."
+  }
+}

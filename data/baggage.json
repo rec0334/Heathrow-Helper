@@ -1,0 +1,74 @@
+{
+  "british airways": {
+    "economy": {"cabin": "Up to 56 x 45 x 25 cm, 23 kg", "personal": "Up to 40 x 30 x 15 cm", "checked": "1 bag, 23 kg (Basic fares: hand baggage only)", "excess": "About £65 per extra bag and £65 per overweight bag (24-32 kg)"},
+    "premium economy": {"cabin": "1 bag + 1 personal item", "personal": "Up to 40 x 30 x 15 cm", "checked": "2 bags, 23 kg each", "excess": "About £65 per extra bag"},
+    "business": {"cabin": "1 bag + 1 personal item", "personal": "Up to 40 x 30 x 15 cm", "checked": "2 bags, 32 kg each", "excess": "About £65 per extra bag"},
+    "first": {"cabin": "1 bag + 1 personal item", "personal": "Up to 40 x 30 x 15 cm", "checked": "3 bags, 32 kg each", "excess": "About £65 per extra bag"}
+  },
+  "lufthansa": {
+    "economy": {"cabin": "Up to 55 x 40 x 23 cm, 8 kg", "personal": "Up to 40 x 30 x 10 cm", "checked": "Light fare: hand baggage only. Classic+: 1 bag, 23 kg", "excess": "About £100 per extra bag (varies by route)"},
+    "premium economy": {"cabin": "Same as economy", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About £100 per extra bag"},
+    "business": {"cabin": "2 bags, 8 kg each", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About £100 per extra bag"},
+    "first": {"cabin": "2 bags, 8 kg each", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £100 per extra bag"}
+  },
+  "emirates": {
+    "economy": {"cabin": "Up to 55 x 38 x 20 cm, 7 kg", "personal": "Laptop bag or handbag", "checked": "1 bag, 25 kg (most routes); 35 kg on US routes", "excess": "About £25 per kg (varies)"},
+    "premium economy": {"cabin": "Same as economy", "personal": "Same", "checked": "35 kg total", "excess": "About £25 per kg"},
+    "business": {"cabin": "2 bags, 7 kg combined 14 kg", "personal": "Same", "checked": "40 kg total", "excess": "About £25 per kg"},
+    "first": {"cabin": "2 bags, 7 kg combined 14 kg", "personal": "Same", "checked": "50 kg total", "excess": "About £25 per kg"}
+  },
+  "delta": {
+    "economy": {"cabin": "Up to 56 x 35 x 23 cm", "personal": "Personal item that fits under the seat", "checked": "Basic Economy: paid; Main Cabin: 1 bag 23 kg", "excess": "About $100 (£80) per extra bag"},
+    "premium economy": {"cabin": "Same as economy", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About $100 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About $100 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About $100 per extra bag"}
+  },
+  "american airlines": {
+    "economy": {"cabin": "Up to 56 x 36 x 23 cm", "personal": "Up to 45 x 35 x 20 cm", "checked": "Basic Economy: paid; Main Cabin: 1 bag 23 kg on transatlantic", "excess": "About $100 (£80) per extra bag"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About $100 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About $100 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About $100 per extra bag"}
+  },
+  "united": {
+    "economy": {"cabin": "Up to 56 x 35 x 22 cm", "personal": "Up to 43 x 25 x 22 cm", "checked": "Basic Economy: paid; Standard: 1 bag 23 kg on transatlantic", "excess": "About $100 (£80) per extra bag"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About $100 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About $100 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About $100 per extra bag"}
+  },
+  "virgin atlantic": {
+    "economy": {"cabin": "Up to 56 x 36 x 23 cm, 10 kg", "personal": "Handbag or laptop bag", "checked": "Economy Light: hand baggage only; Classic: 1 bag 23 kg", "excess": "About £65 per extra bag"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About £65 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £65 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £65 per extra bag"}
+  },
+  "klm": {
+    "economy": {"cabin": "Up to 55 x 35 x 25 cm, 12 kg combined with personal", "personal": "Up to 40 x 30 x 15 cm", "checked": "Light: hand baggage only; Standard: 1 bag 23 kg", "excess": "About £100 per extra bag"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About £100 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About £100 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £100 per extra bag"}
+  },
+  "air france": {
+    "economy": {"cabin": "Up to 55 x 35 x 25 cm, 12 kg combined with personal", "personal": "Up to 40 x 30 x 15 cm", "checked": "Light: hand baggage only; Standard: 1 bag 23 kg", "excess": "About £100 per extra bag"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 23 kg each", "excess": "About £100 per extra bag"},
+    "business": {"cabin": "Same", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About £100 per extra bag"},
+    "first": {"cabin": "Same", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £100 per extra bag"}
+  },
+  "qantas": {
+    "economy": {"cabin": "Up to 56 x 36 x 23 cm, 7 kg", "personal": "Small handbag", "checked": "1 bag, 30 kg (international)", "excess": "About £30-50 per extra bag depending on route"},
+    "premium economy": {"cabin": "2 bags, 7 kg each", "personal": "Same", "checked": "2 bags, 23 kg each (40 kg total)", "excess": "About £50 per extra bag"},
+    "business": {"cabin": "2 bags, 7 kg each", "personal": "Same", "checked": "2 bags, 32 kg each", "excess": "About £50 per extra bag"},
+    "first": {"cabin": "2 bags, 7 kg each", "personal": "Same", "checked": "3 bags, 32 kg each", "excess": "About £50 per extra bag"}
+  },
+  "singapore airlines": {
+    "economy": {"cabin": "Up to 56 x 36 x 23 cm, 7 kg", "personal": "Laptop bag or handbag", "checked": "30 kg total", "excess": "About £30-60 per kg"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "35 kg total", "excess": "About £30-60 per kg"},
+    "business": {"cabin": "2 bags, 7 kg each", "personal": "Same", "checked": "40 kg total", "excess": "About £30-60 per kg"},
+    "first": {"cabin": "2 bags, 7 kg each", "personal": "Same", "checked": "50 kg total", "excess": "About £30-60 per kg"}
+  },
+  "qatar": {
+    "economy": {"cabin": "Up to 50 x 37 x 25 cm, 7 kg", "personal": "Laptop bag or handbag", "checked": "Classic: 25 kg; Convenience: 30 kg; Comfort: 35 kg", "excess": "About £25 per kg"},
+    "premium economy": {"cabin": "Same", "personal": "Same", "checked": "35 kg total", "excess": "About £25 per kg"},
+    "business": {"cabin": "2 bags, 7 kg each combined 15 kg", "personal": "Same", "checked": "40 kg total", "excess": "About £25 per kg"},
+    "first": {"cabin": "2 bags, 7 kg each combined 15 kg", "personal": "Same", "checked": "50 kg total", "excess": "About £25 per kg"}
+  }
+}
