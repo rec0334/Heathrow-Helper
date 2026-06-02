@@ -794,6 +794,152 @@ def handle_parking(m: str):
     )
 
 
+LHR_FLIGHT_CACHE_TTL = 180
+
+
+def _fetch_lhr_flights(kind: str):
+    cache_key = f"lhr_flights:{kind}"
+    now = time.time()
+    hit = _cache.get(cache_key)
+    if hit and now - hit[0] < LHR_FLIGHT_CACHE_TTL:
+        return hit[1]
+    from datetime import datetime, timezone
+    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    order_by = "localDepartureTime" if kind == "departures" else "localArrivalTime"
+    url = f"https://api-dp-prod.dp.heathrow.com/pihub/flights/{kind}?date={date_str}&orderBy={order_by}&excludeCodeShares=true"
+    try:
+        r = requests.get(url, headers=LHR_API_HEADERS, timeout=12)
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        _cache[cache_key] = (now, data)
+        return data
+    except Exception:
+        return None
+
+
+def _find_lhr_flight(fn: str, kind: str):
+    flights = _fetch_lhr_flights(kind)
+    if not flights:
+        return None
+    fn_u = fn.upper().replace(" ", "").replace("-", "")
+    m = re.match(r"^([A-Z]{2,3})(\d+)$", fn_u)
+    candidates = {fn_u}
+    if m:
+        prefix, num = m.group(1), m.group(2)
+        candidates.add(prefix + num.lstrip("0"))
+        candidates.add(prefix + num.zfill(3))
+        candidates.add(prefix + num.zfill(4))
+    for f in flights:
+        ident = (f.get("flightService", {}).get("iataFlightIdentifier") or "").upper().replace(" ", "").replace("-", "")
+        if ident in candidates:
+            return f
+    return None
+
+
+def _lhr_port(f, port_type: str):
+    am = f.get("flightService", {}).get("aircraftMovement", {})
+    for p in (am.get("route", {}).get("portsOfCall") or []):
+        if p.get("portOfCallType") == port_type:
+            return p
+    return {}
+
+
+def _lhr_badge(status_code: str, message: str, status_data: list, mode: str = "departure"):
+    code = status_code or ""
+    msg = message or ""
+    data_map = {item.get("localisationKey"): item.get("data") for item in (status_data or [])}
+    verb = "departs" if mode == "departure" else "arrives"
+    if code == "CX":
+        return "❌ **CANCELLED** — contact your airline"
+    if code == "DV":
+        return "⚠️ **DIVERTED** — contact your airline"
+    if code == "AB":
+        t = data_map.get("Departed", "")
+        return f"✈️ **DEPARTED at {t}** — gate closed" if t else "✈️ **DEPARTED** — gate closed"
+    if code == "TX":
+        t = data_map.get("Taxied", "")
+        return f"✈️ **TAXIING** — left gate at {t}" if t else "✈️ **TAXIING**"
+    if code == "GC":
+        return "🚫 **GATE CLOSED** — boarding ended"
+    if code == "LC":
+        gate = msg.split("at gate")[-1].strip() if "at gate" in msg else ""
+        return f"🚪 **FLIGHT CLOSING** at gate **{gate}**" if gate else "🚪 **FLIGHT CLOSING**"
+    if code == "BD":
+        gate = msg.split("at gate")[-1].strip() if "at gate" in msg else ""
+        return f"🛫 **BOARDING NOW** at gate **{gate}**" if gate else "🛫 **BOARDING NOW**"
+    if code == "GO":
+        gate = msg.replace("Gate open", "").strip()
+        return f"📣 **GATE OPEN** at **{gate}**" if gate else "📣 **GATE OPEN**"
+    if "Delayed" in msg and ("," in msg or data_map.get("Delayed")):
+        t = data_map.get("Delayed", "")
+        verb_d = "departure" if mode == "departure" else "arrival"
+        return f"🕐 **DELAYED — new {verb_d} {t}**" if t else "🕐 **DELAYED**"
+    if "On time" in msg:
+        t = ""
+        if "On time " in msg:
+            after = msg.split("On time", 1)[1].strip()
+            t = after.split(",")[0].strip()
+        return f"⏰ **ON TIME** — {verb} **{t}**" if t else "⏰ **ON TIME**"
+    if code == "NI":
+        return "🕐 **DELAYED** — contact your airline"
+    if code == "LD":
+        t = msg.replace("Landed", "").strip().rstrip(",")
+        return f"✅ **LANDED at {t}**" if t else "✅ **LANDED**"
+    if code == "FB":
+        return f"✅ **{msg}**"
+    if code == "LB":
+        return f"✅ **{msg}**"
+    if "Expected" in msg:
+        t = msg.replace("Expected", "").strip()
+        return f"✈️ **IN FLIGHT** — expected **{t}**"
+    if "Estimated" in msg:
+        t = msg.replace("Estimated", "").strip()
+        return f"✈️ **IN FLIGHT** — estimated arrival **{t}**"
+    return f"⏰ **{msg}**" if msg else None
+
+
+def _flight_from_lhr(fn: str, mode: str):
+    kind = "departures" if mode == "departure" else "arrivals"
+    f = _find_lhr_flight(fn, kind)
+    if not f:
+        return None
+    am = f.get("flightService", {}).get("aircraftMovement", {})
+    statuses = am.get("aircraftMovementStatus") or []
+    status_code = statuses[0].get("statusCode", "") if statuses else ""
+    message = statuses[0].get("message", "") if statuses else ""
+    status_data = statuses[0].get("statusData") or []
+    badge = _lhr_badge(status_code, message, status_data, mode=mode)
+    lhr_port = _lhr_port(f, "ORIGIN" if mode == "departure" else "DESTINATION")
+    other_port = _lhr_port(f, "DESTINATION" if mode == "departure" else "ORIGIN")
+    terminal = (lhr_port.get("airportFacility", {}).get("terminalFacility") or {}).get("code")
+    gate = ((lhr_port.get("airportFacility", {}).get("terminalFacility") or {}).get("gateFacility") or {}).get("gateNumber")
+    zone = ((lhr_port.get("airportFacility", {}).get("terminalFacility") or {}).get("checkInZoneFacility") or {}).get("identifier")
+    pier = ((lhr_port.get("airportFacility", {}).get("terminalFacility") or {}).get("gateFacility") or {}).get("pierCode")
+    sched_local = (lhr_port.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
+    est_local = (lhr_port.get("operatingTimes", {}).get("estimated") or {}).get("local", "")
+    actual_local = (lhr_port.get("operatingTimes", {}).get("actual") or {}).get("local", "")
+    other_iata = (other_port.get("airportFacility") or {}).get("iataIdentifier", "?")
+    other_city = ((other_port.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", "")
+    lhr_iata = (lhr_port.get("airportFacility") or {}).get("iataIdentifier", "?")
+    return {
+        "flight": fn,
+        "badge": badge,
+        "status_code": status_code,
+        "status_message": message,
+        "terminal": _clean(terminal),
+        "gate": _clean(gate),
+        "zone": zone,
+        "pier": pier,
+        "scheduled": sched_local[11:16] if sched_local else "TBA",
+        "estimated": est_local[11:16] if est_local else "",
+        "actual": actual_local[11:16] if actual_local else "",
+        "other_iata": other_iata,
+        "other_city": other_city,
+        "lhr_iata": lhr_iata,
+    }
+
+
 def _clean(v, default="TBA"):
     if v is None or v == "" or str(v).lower() in ("none", "null", "?"):
         return default
@@ -864,13 +1010,57 @@ def _badge_arrival(status, delay, sched_iso, est_iso, actual_iso, baggage):
 
 
 def flight_status(fn: str, mode: str = "departure"):
-    if not AVIA_KEY:
-        return f"Live flight lookup isn't configured. Please set `AVIATIONSTACK_KEY` in your `.env` file. (Flight {fn} could not be checked.)"
     cache_key = f"{fn}:{mode}"
     now = time.time()
     hit = _cache.get(cache_key)
     if hit and now - hit[0] < CACHE_TTL:
         return hit[1] + "\n\n*(cached)*"
+
+    lhr = _flight_from_lhr(fn, mode)
+    if lhr:
+        if mode == "departure":
+            extra = ""
+            if lhr["zone"]:
+                extra += f"\n- **Check-in Zone:** {lhr['zone']}"
+            if lhr["pier"]:
+                extra += f"\n- **Pier:** {lhr['pier']}"
+            time_lines = [f"- **Scheduled departure:** {lhr['scheduled']}"]
+            if lhr["estimated"] and lhr["estimated"] != lhr["scheduled"]:
+                time_lines.append(f"- **New departure time:** **{lhr['estimated']}**")
+            if lhr["actual"]:
+                time_lines.append(f"- **Actual departure:** {lhr['actual']}")
+            out = (
+                f"**Flight {fn}** — {lhr['lhr_iata']} to {lhr['other_iata']} ({lhr['other_city']})\n\n"
+                f"{lhr['badge']}\n\n"
+                f"- **Terminal:** {lhr['terminal']}\n"
+                f"- **Gate:** {lhr['gate']}"
+                f"{extra}\n"
+                + "\n".join(time_lines)
+                + f"\n- **Heathrow status:** {lhr['status_message']}\n\n"
+                "*Source: Heathrow live departure board.*"
+            )
+        else:
+            time_lines = [f"- **Scheduled arrival:** {lhr['scheduled']}"]
+            if lhr["estimated"] and lhr["estimated"] != lhr["scheduled"]:
+                time_lines.append(f"- **Estimated arrival:** {lhr['estimated']}")
+            if lhr["actual"]:
+                time_lines.append(f"- **Actual arrival:** {lhr['actual']}")
+            out = (
+                f"**Flight {fn}** — arriving {lhr['lhr_iata']} from {lhr['other_iata']} ({lhr['other_city']})\n\n"
+                f"{lhr['badge']}\n\n"
+                f"- **Arrival terminal:** {lhr['terminal']}\n"
+                f"- **Arrival gate:** {lhr['gate']}\n"
+                + "\n".join(time_lines)
+                + f"\n- **Heathrow status:** {lhr['status_message']}\n\n"
+                "*Source: Heathrow live arrival board.*"
+            )
+            if lhr["lhr_iata"] == "LHR":
+                out += "\n\n*Pickup tip:* Short Stay car parks at every terminal — drop-off charge £7 (5 min). Free pickup at Long Stay (Park & Ride)."
+        _cache[cache_key] = (now, out)
+        return out
+
+    if not AVIA_KEY:
+        return f"Live flight lookup isn't configured. Please set `AVIATIONSTACK_KEY` in your `.env` file. (Flight {fn} could not be checked.)"
     try:
         r = requests.get(
             "http://api.aviationstack.com/v1/flights",
