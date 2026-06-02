@@ -119,7 +119,7 @@ CABIN_CLASSES = {
 
 
 _FLIGHT_CODE = re.compile(r"\b[A-Z]{2,3}\d{1,4}\b")
-_EN_KW = re.compile(r"\b(what|where|how|when|why|can|is|are|do|does|the|my|your|i|we|baggage|terminal|flight|gate|lounge|security|check[-\s]?in|status|bring|airport|heathrow|lhr|t[2-5]|economy|business|first|premium|wheelchair|lounges|parking|drop|pickup|tube|express)\b", re.IGNORECASE)
+_EN_KW = re.compile(r"\b(what|where|how|when|why|can|is|are|do|does|the|my|your|i|we|baggage|terminal|flight|flights|gate|lounge|security|check[-\s]?in|status|bring|airport|heathrow|lhr|t[2-5]|economy|business|first|premium|wheelchair|lounges|parking|drop|pickup|tube|express|cancel|cancelled|cancellation|cancellations|arrival|arrivals|depart|departure|departures|delayed|delay|landing|land|disruption|disruptions|customs|connection|connecting|train|trains|elizabeth|piccadilly|paddington|vat|amex|barclays|hsbc|chase|revolut)\b", re.IGNORECASE)
 
 
 def _detect_language(msg: str) -> str:
@@ -197,6 +197,13 @@ def _respond_en(msg: str) -> str:
     _dep_keys = ["depart", "takeoff", "take off", "leaves", "leaving", "boarding"]
     if _fn_early and any(k in m for k in _arr_keys) and not any(k in m for k in _dep_keys):
         return flight_status(_fn_early.group(1) + _fn_early.group(2), mode="arrival")
+
+    if any(k in m for k in ["cancellation", "cancelled flight", "cancelled flights", "cancelled arriv", "cancelled depart", "any cancel", "cancellations today", "cancel today", "cancellations heathrow", "flights cancelled"]):
+        if "arriv" in m and "depart" not in m:
+            return handle_cancellations("arrivals")
+        if "depart" in m and "arriv" not in m:
+            return handle_cancellations("departures")
+        return handle_cancellations("both")
 
     if any(k in m for k in ["disruption", "disrupt", "strike", "industrial action", "tube status", "weather today", "delay today", "any delays today", "any problems", "problem at heathrow", "is the tube working", "is heathrow open", "what is happening", "what's happening today"]):
         return handle_disruptions()
@@ -702,6 +709,58 @@ def handle_destination(text: str, terminal_filter: str = None):
     lines.append(f"*Tip:* Ask *'{first_fn} status'* for full details on a specific flight.")
     lines.append("*Source: Heathrow live departure board.*")
     return "\n".join(lines)
+
+
+def handle_cancellations(kind: str = "both"):
+    out_lines = []
+    totals = {"departures": 0, "arrivals": 0}
+    sections = []
+    feeds = []
+    if kind in ("both", "departures", "departure"):
+        feeds.append(("departures", "Cancelled departures", "DESTINATION"))
+    if kind in ("both", "arrivals", "arrival"):
+        feeds.append(("arrivals", "Cancelled arrivals", "ORIGIN"))
+    for feed_kind, label, other_port_type in feeds:
+        data = _fetch_lhr_flights(feed_kind)
+        if not data:
+            sections.append(f"**{label}:** _live data temporarily unavailable_")
+            continue
+        cancelled = []
+        for f in data:
+            am = f.get("flightService", {}).get("aircraftMovement", {})
+            statuses = am.get("aircraftMovementStatus") or []
+            for s in statuses:
+                if (s.get("statusCode") or "") == "CX":
+                    cancelled.append(f)
+                    break
+        totals[feed_kind] = len(cancelled)
+        if not cancelled:
+            sections.append(f"**{label}:** _none on the live board right now_ ✅")
+            continue
+        lhr_port_type = "ORIGIN" if feed_kind == "departures" else "DESTINATION"
+        cancelled.sort(key=lambda x: (
+            (_lhr_port(x, lhr_port_type).get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
+        ))
+        items = []
+        for f in cancelled[:15]:
+            fs = f.get("flightService", {})
+            fn = fs.get("iataFlightIdentifier", "?")
+            lhr_p = _lhr_port(f, lhr_port_type)
+            other_p = _lhr_port(f, other_port_type)
+            sched_local = (lhr_p.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
+            sched_hhmm = sched_local[11:16] if sched_local else "?"
+            terminal = _clean((lhr_p.get("airportFacility", {}).get("terminalFacility") or {}).get("code"))
+            other_iata = (other_p.get("airportFacility") or {}).get("iataIdentifier", "?")
+            other_city = ((other_p.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", other_iata)
+            arrow = "→" if feed_kind == "departures" else "←"
+            items.append(f"- **{sched_hhmm}** — **{fn}** • T{terminal} {arrow} {other_city} ({other_iata})")
+        more = f"\n_+ {len(cancelled) - 15} more_" if len(cancelled) > 15 else ""
+        sections.append(f"**{label} today: {len(cancelled)}**\n" + "\n".join(items) + more)
+    header = "**Heathrow cancellations today**"
+    summary = f"\n*Live board: {totals.get('departures', 0)} cancelled departures, {totals.get('arrivals', 0)} cancelled arrivals.*\n"
+    body = "\n\n".join(sections)
+    footer = "\n\n*If your flight is on the list, contact your airline for rebooking. Compensation rules: UK261/EC261 may apply for flights to/from the UK or operated by UK/EU carriers.*"
+    return f"{header}{summary}\n{body}{footer}"
 
 
 def handle_terminal_departures(terminal: str):
@@ -1623,7 +1682,7 @@ def help_msg():
         "- **Transport to/from LHR** — *'Heathrow Express cost'*, *'Elizabeth line ticket'*, *'Piccadilly line to King's Cross'*\n"
         "- **Parking + drop-off** — *'long stay parking'* or *'drop-off charge'*\n\n"
         "**Before/after your flight**\n"
-        "- **Live disruptions** — *'any disruptions today'* or *'is the tube working'*\n"
+        "- **Live disruptions + cancellations** — *'any disruptions today'*, *'cancelled flights today'*, *'cancelled arrivals'*, *'is the tube working'*\n"
         "- **VAT refund / duty-free** — *'VAT refund desk'* or *'duty-free at Heathrow'*\n"
         "- **UK customs allowance** — *'customs allowance'* or *'alcohol I can bring into UK'*"
     )

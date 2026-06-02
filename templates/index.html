@@ -337,7 +337,7 @@
     <button class="chip" data-sub="trains">🚆 Trains to London</button>
     <button class="chip" data-sub="customs">💷 Customs / VAT</button>
     <button class="chip" data-sub="baggage">🧳 Baggage allowance</button>
-    <button class="chip" data-q="any disruptions today">⚠️ Disruptions</button>
+    <button class="chip" data-sub="disruptions">⚠️ Disruptions</button>
     <button class="chip" data-q="help">❓ Help</button>
   </div>
 
@@ -593,6 +593,16 @@
           ['Tobacco limit', 'tobacco allowance UK'],
           ['Duty-free shopping', 'duty-free at Heathrow'],
           ['VAT refund', 'VAT refund at Heathrow'],
+        ],
+      },
+      disruptions: {
+        label: 'What do you want to check?',
+        items: [
+          ['Live alerts', 'any disruptions today'],
+          ['All cancellations', 'any cancellations today'],
+          ['Cancelled departures', 'cancelled departures'],
+          ['Cancelled arrivals', 'cancelled arrivals'],
+          ['Is the tube working?', 'is the tube working'],
         ],
       },
       baggage: {
