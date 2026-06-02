@@ -604,8 +604,6 @@ def _fetch_dep_to(arr_iata: str):
 
 
 def handle_destination(text: str):
-    if not AVIA_KEY:
-        return "Live flight search needs an Aviationstack key. Set `AVIATIONSTACK_KEY` in `.env`."
     city, iatas = _resolve_destination(text)
     if not iatas:
         return (
@@ -614,56 +612,61 @@ def handle_destination(text: str):
             "or a 3-letter airport code (e.g. *'flights to JFK'*)."
         )
     iatas = iatas[:3]
-    flights = []
-    for iata in iatas:
-        data = _fetch_dep_to(iata)
-        if data:
-            for f in data:
-                flights.append((iata, f))
-    if not flights:
-        return f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}) on today's schedule. Try the Heathrow live departure board."
-    from datetime import datetime, timezone
-    now_utc = datetime.now(timezone.utc)
-    enriched = []
-    for iata, f in flights:
-        dep = f.get("departure") or {}
-        sched = (dep.get("scheduled") or "")[:19]
-        try:
-            ts = datetime.fromisoformat(sched).replace(tzinfo=timezone.utc)
-        except Exception:
-            continue
-        if ts < now_utc - __import__("datetime").timedelta(minutes=30):
-            continue
-        enriched.append((ts, iata, f))
-    enriched.sort(key=lambda x: x[0])
-    enriched = enriched[:8]
-    if not enriched:
-        return f"All flights to **{city.title()}** for today appear to have already departed. Check the Heathrow live board for tomorrow's schedule."
+    iatas_set = set(iatas)
+    feed = _fetch_lhr_flights("departures")
+    matches = []
+    if feed:
+        from datetime import datetime, timezone, timedelta
+        now_utc = datetime.now(timezone.utc)
+        for f in feed:
+            dest_port = _lhr_port(f, "DESTINATION")
+            dest_iata = ((dest_port.get("airportFacility") or {}).get("iataIdentifier") or "").upper()
+            if dest_iata not in iatas_set:
+                continue
+            sched_utc = (dest_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
+            origin_port = _lhr_port(f, "ORIGIN")
+            origin_sched_utc = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
+            try:
+                ts = datetime.fromisoformat(origin_sched_utc[:19]).replace(tzinfo=timezone.utc)
+            except Exception:
+                continue
+            if ts < now_utc - timedelta(minutes=30):
+                continue
+            matches.append((ts, dest_iata, f))
+    if not matches:
+        return (
+            f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}) on Heathrow's live board for today, "
+            "or they have already departed. Try the Heathrow app for tomorrow's schedule."
+        )
+    matches.sort(key=lambda x: x[0])
+    matches = matches[:10]
     multi_airport = len(iatas) > 1
     header = f"**Today's flights from Heathrow to {city.title()}**"
     if multi_airport:
         header += f" (airports: {', '.join(iatas)})"
     lines = [header, ""]
-    for ts, iata, f in enriched:
-        dep = f.get("departure") or {}
-        fn = (f.get("flight") or {}).get("iata") or "?"
-        airline = (f.get("airline") or {}).get("name") or "?"
-        sched_hhmm = (dep.get("scheduled") or "")[11:16] or "?"
-        est_hhmm = (dep.get("estimated") or "")[11:16]
-        terminal = dep.get("terminal") or "?"
-        gate = dep.get("gate") or "TBA"
-        status = (f.get("flight_status") or "scheduled").title()
-        delay = dep.get("delay") or 0
+    for ts, iata, f in matches:
+        fs = f.get("flightService", {})
+        fn = fs.get("iataFlightIdentifier", "?")
+        am = fs.get("aircraftMovement", {})
+        origin_port = _lhr_port(f, "ORIGIN")
+        sched_local = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
+        terminal = _clean((origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("code"))
+        gate = _clean(((origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("gateFacility") or {}).get("gateNumber"))
+        statuses = am.get("aircraftMovementStatus") or []
+        sc = statuses[0].get("statusCode", "") if statuses else ""
+        msg = statuses[0].get("message", "") if statuses else ""
+        status_data = statuses[0].get("statusData") or []
+        badge = _lhr_badge(sc, msg, status_data, mode="departure") or msg or "Scheduled"
+        sched_hhmm = sched_local[11:16] if sched_local else "?"
         dest_label = f" → {iata}" if multi_airport else ""
-        time_str = sched_hhmm
-        if est_hhmm and est_hhmm != sched_hhmm:
-            time_str = f"{sched_hhmm} (est {est_hhmm})"
-        delay_str = f" • {delay} min delay" if delay and delay > 0 else ""
         lines.append(
-            f"- **{time_str}** — **{fn}** {airline} • T{terminal} • Gate {gate} • {status}{delay_str}{dest_label}"
+            f"- **{sched_hhmm}** — **{fn}** • T{terminal} • Gate {gate} • {badge}{dest_label}"
         )
     lines.append("")
-    lines.append(f"*Tip:* Ask *'{enriched[0][2].get('flight', {}).get('iata', 'BA177')} status'* for full details on a specific flight, or *'when does {enriched[0][2].get('flight', {}).get('iata', 'BA177')} depart'* for the live gate update.")
+    first_fn = matches[0][2].get("flightService", {}).get("iataFlightIdentifier", "BA177")
+    lines.append(f"*Tip:* Ask *'{first_fn} status'* for full details on a specific flight.")
+    lines.append("*Source: Heathrow live departure board.*")
     return "\n".join(lines)
 
 
@@ -1060,7 +1063,13 @@ def flight_status(fn: str, mode: str = "departure"):
         return out
 
     if not AVIA_KEY:
-        return f"Live flight lookup isn't configured. Please set `AVIATIONSTACK_KEY` in your `.env` file. (Flight {fn} could not be checked.)"
+        return (
+            f"**{fn}** isn't on Heathrow's live board right now. This usually means:\n\n"
+            "- The flight isn't operating today\n"
+            "- The flight number is for a codeshare partner (try the operating carrier's number)\n"
+            "- It's outside today's published schedule window\n\n"
+            "Check the Heathrow app or your airline for the latest."
+        )
     try:
         r = requests.get(
             "http://api.aviationstack.com/v1/flights",
@@ -1069,7 +1078,14 @@ def flight_status(fn: str, mode: str = "departure"):
         )
         body = r.json()
         if body.get("error"):
-            return f"Sorry, the flight data service returned an error: *{body['error'].get('message', 'unknown error')}*"
+            err_msg = (body["error"].get("message") or "").lower()
+            if "monthly usage limit" in err_msg or "subscription plan" in err_msg or "quota" in err_msg:
+                return (
+                    f"**{fn}** isn't on Heathrow's live board right now, and the backup flight-data service has hit its monthly limit.\n\n"
+                    "Try a Heathrow-departing or Heathrow-arriving flight (those use the airport's own feed and always work). "
+                    "For destinations outside LHR, check your airline app for now."
+                )
+            return f"Couldn't reach the backup flight-data service: *{body['error'].get('message', 'unknown error')}*. Try again shortly."
         d = body.get("data") or []
         if not d:
             return f"I couldn't find **{fn}** on today's schedule. Please double-check the flight number, or try again later."
