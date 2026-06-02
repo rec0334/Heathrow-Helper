@@ -794,6 +794,75 @@ def handle_parking(m: str):
     )
 
 
+def _clean(v, default="TBA"):
+    if v is None or v == "" or str(v).lower() in ("none", "null", "?"):
+        return default
+    return str(v)
+
+
+def _badge_departure(status, delay, sched_iso, est_iso, gate):
+    from datetime import datetime, timezone
+    status_l = (status or "").lower()
+    sched_hhmm = (sched_iso or "")[11:16]
+    est_hhmm = (est_iso or "")[11:16]
+    new_time = est_hhmm if est_hhmm and est_hhmm != sched_hhmm else sched_hhmm
+    if status_l == "cancelled":
+        return f"❌ **CANCELLED** — contact your airline"
+    if status_l == "diverted":
+        return f"⚠️ **DIVERTED** — check with your airline"
+    if status_l == "incident":
+        return f"🚨 **INCIDENT** — contact your airline"
+    if status_l == "landed":
+        return f"✅ **ARRIVED at destination**"
+    if status_l == "active":
+        return f"✈️ **DEPARTED / IN FLIGHT** — gate closed"
+    if delay and delay >= 5:
+        return f"🕐 **DELAYED by {delay} min** — new departure **{new_time}** (was {sched_hhmm})"
+    try:
+        sched_dt = datetime.fromisoformat(sched_iso[:19]).replace(tzinfo=timezone.utc)
+        now_utc = datetime.now(timezone.utc)
+        mins = (sched_dt - now_utc).total_seconds() / 60
+    except Exception:
+        mins = None
+    gate_clean = _clean(gate, "")
+    gate_suffix = f" at gate **{gate_clean}**" if gate_clean and gate_clean != "TBA" else ""
+    if mins is not None:
+        if mins <= -30:
+            return "🚫 **GATE CLOSED** — flight has departed"
+        if mins <= -5:
+            return "🚫 **GATE CLOSED** — boarding ended"
+        if mins <= 5:
+            return f"🚪 **FINAL CALL / GATE CLOSING**{gate_suffix}"
+        if mins <= 20:
+            return f"🛫 **BOARDING NOW**{gate_suffix} — departs **{new_time}**"
+        if mins <= 40 and gate_clean and gate_clean != "TBA":
+            return f"📣 **GATE OPEN**{gate_suffix} — boards soon, departs **{new_time}**"
+    return f"⏰ **ON TIME** — departs **{new_time}**"
+
+
+def _badge_arrival(status, delay, sched_iso, est_iso, actual_iso, baggage):
+    status_l = (status or "").lower()
+    sched_hhmm = (sched_iso or "")[11:16]
+    est_hhmm = (est_iso or "")[11:16]
+    actual_hhmm = (actual_iso or "")[11:16]
+    new_time = actual_hhmm or est_hhmm or sched_hhmm
+    if status_l == "cancelled":
+        return "❌ **CANCELLED** — contact your airline"
+    if status_l == "diverted":
+        return "⚠️ **DIVERTED** — check with your airline"
+    if status_l == "landed":
+        belt = _clean(baggage, "")
+        belt_str = f" — bags on belt **{belt}**" if belt and belt != "TBA" else " — bags coming"
+        return f"✅ **LANDED at {actual_hhmm or new_time}**{belt_str}"
+    if status_l == "active":
+        return f"✈️ **IN FLIGHT** — arrives around **{new_time}**"
+    if delay and delay >= 5:
+        return f"🕐 **DELAYED by {delay} min** — new arrival **{new_time}** (was {sched_hhmm})"
+    if est_hhmm and est_hhmm != sched_hhmm:
+        return f"⏰ **Estimated arrival {est_hhmm}** (scheduled {sched_hhmm})"
+    return f"⏰ **ON TIME** — lands **{new_time}**"
+
+
 def flight_status(fn: str, mode: str = "departure"):
     if not AVIA_KEY:
         return f"Live flight lookup isn't configured. Please set `AVIATIONSTACK_KEY` in your `.env` file. (Flight {fn} could not be checked.)"
@@ -820,47 +889,62 @@ def flight_status(fn: str, mode: str = "departure"):
         status = (f.get('flight_status') or 'unknown').title()
 
         if mode == "arrival":
-            sched_arr = (arr.get("scheduled") or "")[11:16] or "?"
-            est_arr = (arr.get("estimated") or "")[11:16]
-            actual_arr = (arr.get("actual") or "")[11:16]
+            sched_arr_iso = arr.get("scheduled") or ""
+            est_arr_iso = arr.get("estimated") or ""
+            actual_arr_iso = arr.get("actual") or ""
             delay_arr = arr.get("delay") or 0
-            baggage = arr.get("baggage") or "TBA"
-            arr_term = arr.get("terminal") or "?"
-            arr_gate = arr.get("gate") or "?"
-            arr_iata = arr.get("iata") or "?"
-            dep_iata = dep.get("iata") or "?"
+            baggage = arr.get("baggage")
+            arr_term = _clean(arr.get("terminal"))
+            arr_gate = _clean(arr.get("gate"))
+            arr_iata = _clean(arr.get("iata"), "?")
+            dep_iata = _clean(dep.get("iata"), "?")
+            airline = (f.get("airline") or {}).get("name") or ""
 
+            badge = _badge_arrival(status, delay_arr, sched_arr_iso, est_arr_iso, actual_arr_iso, baggage)
             lines = [
-                f"**Flight {fn}** — arriving {arr_iata} from {dep_iata}",
+                f"**Flight {fn}** {airline} — arriving {arr_iata} from {dep_iata}",
                 "",
-                f"- **Status:** {status}",
+                badge,
+                "",
                 f"- **Arrival terminal:** {arr_term}",
                 f"- **Arrival gate:** {arr_gate}",
-                f"- **Scheduled arrival:** {sched_arr}",
+                f"- **Scheduled arrival:** {sched_arr_iso[11:16] or 'TBA'}",
             ]
-            if est_arr and est_arr != sched_arr:
-                lines.append(f"- **Estimated arrival:** {est_arr}")
-            if actual_arr:
-                lines.append(f"- **Actual arrival:** {actual_arr}")
-            lines.append(f"- **Delay:** {delay_arr} min")
-            lines.append(f"- **Baggage belt:** {baggage}")
+            if est_arr_iso[11:16] and est_arr_iso[11:16] != sched_arr_iso[11:16]:
+                lines.append(f"- **Estimated arrival:** {est_arr_iso[11:16]}")
+            if actual_arr_iso[11:16]:
+                lines.append(f"- **Actual arrival:** {actual_arr_iso[11:16]}")
+            lines.append(f"- **Baggage belt:** {_clean(baggage)}")
+            lines.append(f"- **Status (raw):** {status}")
             if arr_iata == "LHR":
-                lines.append("\n*Pickup tip:* Short Stay car parks are at every terminal — drop-off charge £6 (5 min). Free pickup at Long Stay (Park & Ride).")
+                lines.append("\n*Pickup tip:* Short Stay car parks at every terminal — drop-off charge £7 (5 min). Free pickup at Long Stay (Park & Ride).")
             out = "\n".join(lines)
         else:
-            sched = (dep.get("scheduled") or "")[11:16] or "?"
-            est = (dep.get("estimated") or "")[11:16]
+            sched_iso = dep.get("scheduled") or ""
+            est_iso = dep.get("estimated") or ""
             delay = dep.get("delay") or 0
-            out = (
-                f"**Flight {fn}** — {dep.get('iata','?')} to {arr.get('iata','?')}\n\n"
-                f"- **Status:** {status}\n"
-                f"- **Terminal:** {dep.get('terminal','?')}\n"
-                f"- **Gate:** {dep.get('gate','?')}\n"
-                f"- **Scheduled departure:** {sched}"
-            )
-            if est and est != sched:
-                out += f"\n- **Estimated departure:** {est}"
-            out += f"\n- **Delay:** {delay} min"
+            dep_term = _clean(dep.get("terminal"))
+            dep_gate = _clean(dep.get("gate"))
+            sched_hhmm = sched_iso[11:16] or "TBA"
+            est_hhmm = est_iso[11:16]
+            airline = (f.get("airline") or {}).get("name") or ""
+
+            badge = _badge_departure(status, delay, sched_iso, est_iso, dep.get("gate"))
+            lines = [
+                f"**Flight {fn}** {airline} — {_clean(dep.get('iata'), '?')} to {_clean(arr.get('iata'), '?')}",
+                "",
+                badge,
+                "",
+                f"- **Terminal:** {dep_term}",
+                f"- **Gate:** {dep_gate}",
+                f"- **Scheduled departure:** {sched_hhmm}",
+            ]
+            if est_hhmm and est_hhmm != sched_hhmm:
+                lines.append(f"- **New departure time:** **{est_hhmm}**")
+            if delay:
+                lines.append(f"- **Delay:** {delay} min")
+            lines.append(f"- **Status (raw):** {status}")
+            out = "\n".join(lines)
         _cache[cache_key] = (now, out)
         return out
     except Exception as e:
@@ -1210,7 +1294,7 @@ def help_msg():
         "- **What can I bring?** — *'can I bring a vape'*\n"
         "- **Special assistance** — *'wheelchair assistance'* or *'sunflower lanyard'*\n\n"
         "**Getting around the airport**\n"
-        "- **Live flight status** — *'BA7053 status'* (departure) or *'when does BA7053 land'* (arrival)\n"
+        "- **Live flight status** — *'BA7053 status'* (departure), *'when does BA7053 land'* (arrival), or *'flights to Dubai'* (by destination)\n"
         "- **Terminal lookup** — *'Lufthansa terminal'*\n"
         "- **Security wait + fast-track** — *'security wait T5'*\n"
         "- **Connecting flights** — *'T3 to T5 connection'*\n\n"
