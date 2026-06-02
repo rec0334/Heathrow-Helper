@@ -176,34 +176,41 @@ def _respond_en(msg: str) -> str:
     if not msg:
         return "Hi! What can I help you with?"
     m = " " + re.sub(r"[^\w\s-]", " ", msg.lower().strip()) + " "
+    date_iso, date_label, m_no_date = _extract_date(m)
+    if date_iso:
+        m_eff = " " + m_no_date.strip() + " "
+        msg = re.sub(r"\b(day after tomorrow|tomorrow|tonight|today|tmrw|tmr|in\s+\d{1,2}\s+days?|next\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|this\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|(monday|tuesday|wednesday|thursday|friday|saturday|sunday)|20\d{2}-\d{1,2}-\d{1,2})\b", " ", msg, flags=re.I)
+        msg = re.sub(r"\s+", " ", msg).strip()
+    else:
+        m_eff = m
 
-    from_term_dest = re.search(r"flights?\s+from\s+t(?:erminal)?\s*([2345])\s+to\s+(.+?)(?:[\?\.!]|$)", m, re.I)
+    from_term_dest = re.search(r"flights?\s+from\s+t(?:erminal)?\s*([2345])\s+to\s+(.+?)(?:[\?\.!]|$)", m_eff, re.I)
     if from_term_dest:
-        return handle_destination(from_term_dest.group(2).strip(), terminal_filter=from_term_dest.group(1))
+        return handle_destination(from_term_dest.group(2).strip(), terminal_filter=from_term_dest.group(1), date=date_iso, date_label=date_label)
 
-    term_only = re.search(r"(?:departures?\s+from\s+t(?:erminal)?\s*([2345])|t(?:erminal)?\s*([2345])\s+departures?)\b", m, re.I)
+    term_only = re.search(r"(?:departures?\s+from\s+t(?:erminal)?\s*([2345])|t(?:erminal)?\s*([2345])\s+departures?)\b", m_eff, re.I)
     if term_only:
         t = term_only.group(1) or term_only.group(2)
-        return handle_terminal_departures(t)
+        return handle_terminal_departures(t, date=date_iso, date_label=date_label)
 
-    dest_match = re.search(r"(?:flights?\s+(?:to|for)|departures?\s+to|next\s+flight\s+to|going\s+to|flying\s+to|fly\s+to|travel\s+to)\s+(.+?)(?:\s+today|\s+tomorrow|\s+now|[\?\.!]|$)", m, re.I)
+    dest_match = re.search(r"(?:flights?\s+(?:to|for)|departures?\s+to|next\s+flight\s+to|going\s+to|flying\s+to|fly\s+to|travel\s+to)\s+(.+?)(?:\s+now|[\?\.!]|$)", m_eff, re.I)
     if dest_match and not re.search(r"\b[A-Z]{2,3}\s?\d{1,4}\b", msg.upper()):
         dest_text = dest_match.group(1).strip()
         if dest_text and dest_text not in ("uk", "the uk", "central london", "london", "paddington"):
-            return handle_destination(dest_text)
+            return handle_destination(dest_text, date=date_iso, date_label=date_label)
 
     _fn_early = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
     _arr_keys = ["arriv", "land", "landing", "lands", "baggage belt", "baggage reclaim", "pick up", "picking up", "pickup"]
     _dep_keys = ["depart", "takeoff", "take off", "leaves", "leaving", "boarding"]
-    if _fn_early and any(k in m for k in _arr_keys) and not any(k in m for k in _dep_keys):
-        return flight_status(_fn_early.group(1) + _fn_early.group(2), mode="arrival")
+    if _fn_early and any(k in m_eff for k in _arr_keys) and not any(k in m_eff for k in _dep_keys):
+        return flight_status(_fn_early.group(1) + _fn_early.group(2), mode="arrival", date=date_iso, date_label=date_label)
 
-    if any(k in m for k in ["cancellation", "cancelled flight", "cancelled flights", "cancelled arriv", "cancelled depart", "any cancel", "cancellations today", "cancel today", "cancellations heathrow", "flights cancelled"]):
-        if "arriv" in m and "depart" not in m:
-            return handle_cancellations("arrivals")
-        if "depart" in m and "arriv" not in m:
-            return handle_cancellations("departures")
-        return handle_cancellations("both")
+    if any(k in m_eff for k in ["cancellation", "cancelled flight", "cancelled flights", "cancelled arriv", "cancelled depart", "any cancel", "cancellations today", "cancel today", "cancellations heathrow", "flights cancelled"]):
+        if "arriv" in m_eff and "depart" not in m_eff:
+            return handle_cancellations("arrivals", date=date_iso, date_label=date_label)
+        if "depart" in m_eff and "arriv" not in m_eff:
+            return handle_cancellations("departures", date=date_iso, date_label=date_label)
+        return handle_cancellations("both", date=date_iso, date_label=date_label)
 
     if any(k in m for k in ["disruption", "disrupt", "strike", "industrial action", "tube status", "weather today", "delay today", "any delays today", "any problems", "problem at heathrow", "is the tube working", "is heathrow open", "what is happening", "what's happening today"]):
         return handle_disruptions()
@@ -266,9 +273,9 @@ def _respond_en(msg: str) -> str:
     fn = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
     ARRIVAL_KEYS = ["arriv", "land", "landing", "lands", "when does it get", "baggage belt", "baggage reclaim", "pick up", "picking up", "pickup"]
     DEPARTURE_KEYS = ["depart", "takeoff", "take off", "leaves", "leaving", "boarding"]
-    is_arrival = any(k in m for k in ARRIVAL_KEYS) and not any(k in m for k in DEPARTURE_KEYS)
-    if fn and (is_arrival or any(k in m for k in ["flight", "status", "delay", "gate", "on time", "depart"])):
-        return flight_status(fn.group(1) + fn.group(2), mode="arrival" if is_arrival else "departure")
+    is_arrival = any(k in m_eff for k in ARRIVAL_KEYS) and not any(k in m_eff for k in DEPARTURE_KEYS)
+    if fn and (is_arrival or any(k in m_eff for k in ["flight", "status", "delay", "gate", "on time", "depart"])):
+        return flight_status(fn.group(1) + fn.group(2), mode="arrival" if is_arrival else "departure", date=date_iso, date_label=date_label)
 
     for airline, info in AIRLINES.items():
         if re.search(r"\b" + re.escape(airline.lower()) + r"\b", m) and any(k in m for k in ["terminal", "where", "check in", "gate"]):
@@ -279,7 +286,7 @@ def _respond_en(msg: str) -> str:
         return find_terminal(fuzzy_air, AIRLINES[fuzzy_air])
 
     if fn:
-        return flight_status(fn.group(1) + fn.group(2))
+        return flight_status(fn.group(1) + fn.group(2), date=date_iso, date_label=date_label)
 
     for airline, info in AIRLINES.items():
         if re.search(r"\b" + re.escape(airline.lower()) + r"\b", m):
@@ -637,7 +644,7 @@ def _fetch_dep_to(arr_iata: str):
         return None
 
 
-def handle_destination(text: str, terminal_filter: str = None):
+def handle_destination(text: str, terminal_filter: str = None, date: str = None, date_label: str = None):
     city, iatas = _resolve_destination(text)
     if not iatas:
         return (
@@ -647,11 +654,12 @@ def handle_destination(text: str, terminal_filter: str = None):
         )
     iatas = iatas[:3]
     iatas_set = set(iatas)
-    feed = _fetch_lhr_flights("departures")
+    feed = _fetch_lhr_flights("departures", date=date)
     matches = []
     if feed:
         from datetime import datetime, timezone, timedelta
         now_utc = datetime.now(timezone.utc)
+        is_today = (date_label or "today") == "today" or (date_label or "").startswith("tonight")
         for f in feed:
             dest_port = _lhr_port(f, "DESTINATION")
             dest_iata = ((dest_port.get("airportFacility") or {}).get("iataIdentifier") or "").upper()
@@ -662,27 +670,29 @@ def handle_destination(text: str, terminal_filter: str = None):
                 term = (origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("code")
                 if str(term) != str(terminal_filter):
                     continue
-            sched_utc = (dest_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
             origin_sched_utc = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
             try:
                 ts = datetime.fromisoformat(origin_sched_utc[:19]).replace(tzinfo=timezone.utc)
             except Exception:
                 continue
-            if ts < now_utc - timedelta(minutes=30):
+            if is_today and ts < now_utc - timedelta(minutes=30):
                 continue
             matches.append((ts, dest_iata, f))
     if not matches:
         tail = f" from Terminal {terminal_filter}" if terminal_filter else ""
+        when = date_label or "today"
         return (
-            f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}){tail} on Heathrow's live board for today, "
-            "or they have already departed. Try the Heathrow app for tomorrow's schedule."
+            f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}){tail} on Heathrow's published schedule for **{when}**. "
+            "Try a different date or check the Heathrow app."
         )
     matches.sort(key=lambda x: x[0])
-    matches = matches[:10]
+    matches = matches[:12]
     multi_airport = len(iatas) > 1
-    header = f"**Today's flights from Heathrow to {city.title()}**"
+    when = date_label or "today"
+    when_cap = "Today" if when == "today" else when[0].upper() + when[1:]
+    header = f"**{when_cap}'s flights from Heathrow to {city.title()}**" if when == "today" else f"**Flights from Heathrow to {city.title()} ({when})**"
     if terminal_filter:
-        header = f"**Today's flights from Terminal {terminal_filter} to {city.title()}**"
+        header = f"**{when_cap}'s flights from Terminal {terminal_filter} to {city.title()}**" if when == "today" else f"**Flights from Terminal {terminal_filter} to {city.title()} ({when})**"
     if multi_airport:
         header += f" (airports: {', '.join(iatas)})"
     lines = [header, ""]
@@ -707,11 +717,14 @@ def handle_destination(text: str, terminal_filter: str = None):
     lines.append("")
     first_fn = matches[0][2].get("flightService", {}).get("iataFlightIdentifier", "BA177")
     lines.append(f"*Tip:* Ask *'{first_fn} status'* for full details on a specific flight.")
-    lines.append("*Source: Heathrow live departure board.*")
+    if when == "today":
+        lines.append("*Source: Heathrow live departure board.*")
+    else:
+        lines.append(f"*Source: Heathrow published schedule for {when}. Status badges update from {when[0].lower() + when[1:]} morning onwards.*")
     return "\n".join(lines)
 
 
-def handle_cancellations(kind: str = "both"):
+def handle_cancellations(kind: str = "both", date: str = None, date_label: str = None):
     totals = {"departures": 0, "arrivals": 0}
     sections = []
     feeds = []
@@ -720,7 +733,7 @@ def handle_cancellations(kind: str = "both"):
     if kind in ("both", "arrivals", "arrival"):
         feeds.append(("arrivals", "Cancelled arrivals", "ORIGIN"))
     for feed_kind, label, other_port_type in feeds:
-        data = _fetch_lhr_flights(feed_kind)
+        data = _fetch_lhr_flights(feed_kind, date=date)
         if not data:
             sections.append(f"### {label}\n_live data temporarily unavailable_")
             continue
@@ -745,7 +758,7 @@ def handle_cancellations(kind: str = "both"):
             if terminal not in by_terminal:
                 by_terminal[terminal] = []
             by_terminal[terminal].append(f)
-        section_lines = [f"### {label} ({len(cancelled)} today)"]
+        section_lines = [f"### {label} ({len(cancelled)} {date_label or 'today'})"]
         arrow = "→" if feed_kind == "departures" else "←"
         for tid in ["2", "3", "4", "5", "?"]:
             terminal_flights = by_terminal.get(tid, [])
@@ -768,20 +781,24 @@ def handle_cancellations(kind: str = "both"):
                 other_city = ((other_p.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", other_iata)
                 section_lines.append(f"- **{sched_hhmm}** — **{fn}** {arrow} {other_city} ({other_iata})")
         sections.append("\n".join(section_lines))
-    header = "**Heathrow cancellations today**"
-    summary = f"\n*Live board: {totals.get('departures', 0)} cancelled departures, {totals.get('arrivals', 0)} cancelled arrivals.*\n"
+    when = date_label or "today"
+    when_cap = "today" if when == "today" else when
+    header = f"**Heathrow cancellations {when_cap}**"
+    source = "Live board" if when == "today" else "Published schedule"
+    summary = f"\n*{source}: {totals.get('departures', 0)} cancelled departures, {totals.get('arrivals', 0)} cancelled arrivals.*\n"
     body = "\n\n".join(sections)
     footer = "\n\n*If your flight is on the list, contact your airline for rebooking. Compensation rules: UK261/EC261 may apply for flights to/from the UK or operated by UK/EU carriers.*"
     return f"{header}{summary}\n{body}{footer}"
 
 
-def handle_terminal_departures(terminal: str):
-    feed = _fetch_lhr_flights("departures")
+def handle_terminal_departures(terminal: str, date: str = None, date_label: str = None):
+    feed = _fetch_lhr_flights("departures", date=date)
     if not feed:
-        return f"Couldn't reach Heathrow's live departure board right now. Try again shortly."
+        return f"Couldn't reach Heathrow's departure board right now. Try again shortly."
     from datetime import datetime, timezone, timedelta
     from collections import Counter
     now_utc = datetime.now(timezone.utc)
+    is_today = (date_label or "today") == "today" or (date_label or "").startswith("tonight")
     upcoming = []
     by_dest = Counter()
     city_lookup = {}
@@ -795,7 +812,7 @@ def handle_terminal_departures(terminal: str):
             ts = datetime.fromisoformat(sched_utc[:19]).replace(tzinfo=timezone.utc)
         except Exception:
             continue
-        if ts < now_utc - timedelta(minutes=30):
+        if is_today and ts < now_utc - timedelta(minutes=30):
             continue
         dest_port = _lhr_port(f, "DESTINATION")
         iata = ((dest_port.get("airportFacility") or {}).get("iataIdentifier") or "")
@@ -804,10 +821,14 @@ def handle_terminal_departures(terminal: str):
         city_lookup[iata] = city
         upcoming.append((ts, f, iata, city))
     if not upcoming:
-        return f"No remaining departures from **Terminal {terminal}** today on Heathrow's live board."
+        when = date_label or "today"
+        return f"No remaining departures from **Terminal {terminal}** on Heathrow's board for **{when}**."
     upcoming.sort(key=lambda x: x[0])
     next8 = upcoming[:8]
-    lines = [f"**Terminal {terminal} — next departures**", ""]
+    when = date_label or "today"
+    when_cap = "today" if when == "today" else when
+    when_label = "next departures" if is_today else f"departures ({when_cap})"
+    lines = [f"**Terminal {terminal} — {when_label}**", ""]
     for ts, f, iata, city in next8:
         fs = f["flightService"]
         fn = fs.get("iataFlightIdentifier", "?")
@@ -961,14 +982,83 @@ def handle_parking(m: str):
 LHR_FLIGHT_CACHE_TTL = 180
 
 
-def _fetch_lhr_flights(kind: str):
-    cache_key = f"lhr_flights:{kind}"
+def _extract_date(m: str):
+    """Detect a date phrase in normalized lowercase msg.
+    Returns (date_iso, label, stripped_msg) — date_iso None if not future-day.
+    Supports: today/tonight, tomorrow, day after tomorrow, in N days,
+    next/this <weekday>, "on Friday", explicit YYYY-MM-DD."""
+    from datetime import datetime, timezone, timedelta
+    today = datetime.now(timezone.utc).date()
+    stripped = m
+    iso, label = None, None
+    if re.search(r"\bday after tomorrow\b", m):
+        iso = (today + timedelta(days=2)).isoformat()
+        label = "day after tomorrow"
+        stripped = re.sub(r"\bday after tomorrow\b", " ", stripped)
+    elif re.search(r"\btomorrow\b|\btmrw\b|\btmr\b", m):
+        iso = (today + timedelta(days=1)).isoformat()
+        label = "tomorrow"
+        stripped = re.sub(r"\btomorrow\b|\btmrw\b|\btmr\b", " ", stripped)
+    elif re.search(r"\btonight\b", m):
+        iso = today.isoformat()
+        label = "tonight"
+        stripped = re.sub(r"\btonight\b", " ", stripped)
+    elif re.search(r"\btoday\b", m):
+        iso = today.isoformat()
+        label = "today"
+        stripped = re.sub(r"\btoday\b", " ", stripped)
+    else:
+        mm = re.search(r"\bin\s+(\d{1,2})\s+days?\b", m)
+        if mm:
+            n = int(mm.group(1))
+            if 0 <= n <= 30:
+                d = today + timedelta(days=n)
+                iso = d.isoformat()
+                label = f"in {n} day{'s' if n != 1 else ''} ({d.strftime('%a %d %b')})"
+                stripped = re.sub(r"\bin\s+\d{1,2}\s+days?\b", " ", stripped)
+    if iso is None:
+        mm = re.search(r"\b(next\s+|this\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", m)
+        if mm:
+            qualifier = mm.group(1) or ""
+            day_name = mm.group(2)
+            day_idx = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].index(day_name)
+            today_idx = today.weekday()
+            offset = (day_idx - today_idx) % 7
+            if offset == 0 or "next " in qualifier:
+                if offset == 0:
+                    offset = 7
+                elif "next " in qualifier:
+                    offset = offset if offset >= 1 else 7
+            d = today + timedelta(days=offset)
+            if 0 <= (d - today).days <= 30:
+                iso = d.isoformat()
+                label = f"{day_name.title()} ({d.strftime('%d %b')})"
+                stripped = re.sub(r"\b(next\s+|this\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", " ", stripped)
+    if iso is None:
+        mm = re.search(r"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b", m)
+        if mm:
+            try:
+                d = datetime(int(mm.group(1)), int(mm.group(2)), int(mm.group(3))).date()
+                if 0 <= (d - today).days <= 30:
+                    iso = d.isoformat()
+                    label = d.strftime("%d %b %Y")
+                    stripped = re.sub(r"\b20\d{2}-\d{1,2}-\d{1,2}\b", " ", stripped)
+            except Exception:
+                pass
+    if iso is None:
+        return None, None, m
+    stripped = re.sub(r"\s+", " ", stripped).strip()
+    return iso, label, stripped
+
+
+def _fetch_lhr_flights(kind: str, date: str = None):
+    from datetime import datetime, timezone
+    date_str = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    cache_key = f"lhr_flights:{kind}:{date_str}"
     now = time.time()
     hit = _cache.get(cache_key)
     if hit and now - hit[0] < LHR_FLIGHT_CACHE_TTL:
         return hit[1]
-    from datetime import datetime, timezone
-    date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     order_by = "localDepartureTime" if kind == "departures" else "localArrivalTime"
     url = f"https://api-dp-prod.dp.heathrow.com/pihub/flights/{kind}?date={date_str}&orderBy={order_by}&excludeCodeShares=true"
     try:
@@ -982,8 +1072,8 @@ def _fetch_lhr_flights(kind: str):
         return None
 
 
-def _find_lhr_flight(fn: str, kind: str):
-    flights = _fetch_lhr_flights(kind)
+def _find_lhr_flight(fn: str, kind: str, date: str = None):
+    flights = _fetch_lhr_flights(kind, date=date)
     if not flights:
         return None
     fn_u = fn.upper().replace(" ", "").replace("-", "")
@@ -1063,9 +1153,9 @@ def _lhr_badge(status_code: str, message: str, status_data: list, mode: str = "d
     return f"⏰ **{msg}**" if msg else None
 
 
-def _flight_from_lhr(fn: str, mode: str):
+def _flight_from_lhr(fn: str, mode: str, date: str = None):
     kind = "departures" if mode == "departure" else "arrivals"
-    f = _find_lhr_flight(fn, kind)
+    f = _find_lhr_flight(fn, kind, date=date)
     if not f:
         return None
     am = f.get("flightService", {}).get("aircraftMovement", {})
@@ -1173,17 +1263,17 @@ def _badge_arrival(status, delay, sched_iso, est_iso, actual_iso, baggage):
     return f"⏰ **ON TIME** — lands **{new_time}**"
 
 
-def flight_status(fn: str, mode: str = "departure"):
-    cache_key = f"{fn}:{mode}"
+def flight_status(fn: str, mode: str = "departure", date: str = None, date_label: str = None):
+    cache_key = f"{fn}:{mode}:{date or 'today'}"
     now = time.time()
     hit = _cache.get(cache_key)
     if hit and now - hit[0] < CACHE_TTL:
         return hit[1] + "\n\n*(cached)*"
 
-    lhr = _flight_from_lhr(fn, mode)
+    lhr = _flight_from_lhr(fn, mode, date=date)
     if not lhr:
         other_mode = "arrival" if mode == "departure" else "departure"
-        alt = _flight_from_lhr(fn, other_mode)
+        alt = _flight_from_lhr(fn, other_mode, date=date)
         if alt:
             lhr = alt
             mode = other_mode
@@ -1682,7 +1772,7 @@ def help_msg():
         "- **What can I bring?** — *'can I bring a vape'*\n"
         "- **Special assistance** — *'wheelchair assistance'* or *'sunflower lanyard'*\n\n"
         "**Getting around the airport**\n"
-        "- **Live flight status** — *'BA7053 status'* (departure), *'when does BA7053 land'* (arrival), or *'flights to Dubai'* (by destination)\n"
+        "- **Live flight status** — *'BA7053 status'* (departure), *'when does BA7053 land'* (arrival), or *'flights to Dubai'* (by destination). Add *'tomorrow'*, *'next Friday'* or *'in 3 days'* for future dates.\n"
         "- **Terminal lookup** — *'Lufthansa terminal'*\n"
         "- **Security wait + fast-track** — *'security wait T5'*\n"
         "- **Connecting flights** — *'T3 to T5 connection'*\n\n"

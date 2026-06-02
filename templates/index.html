@@ -546,13 +546,73 @@
 
     const SUB_MENUS = {
       departures: {
-        label: 'Which terminal?',
+        label: 'Today or another day?',
+        items: [
+          ['Today', '__next__:departures-today'],
+          ['Tomorrow', '__next__:departures-tomorrow'],
+          ['Day after tomorrow', '__next__:departures-d2'],
+          ['In 3 days', '__next__:departures-d3'],
+          ['In a week', '__next__:departures-d7'],
+        ],
+      },
+      'departures-today': {
+        label: 'Today — which terminal?',
         items: [
           ['Terminal 2', '__next__:t2-dest'],
           ['Terminal 3', '__next__:t3-dest'],
           ['Terminal 4', '__next__:t4-dest'],
           ['Terminal 5', '__next__:t5-dest'],
           ['All terminals', '__next__:any-dest'],
+        ],
+      },
+      'departures-tomorrow': {
+        label: 'Tomorrow — top destinations',
+        items: [
+          ['All T2 (tomorrow)', 'departures from T2 tomorrow'],
+          ['All T3 (tomorrow)', 'departures from T3 tomorrow'],
+          ['All T4 (tomorrow)', 'departures from T4 tomorrow'],
+          ['All T5 (tomorrow)', 'departures from T5 tomorrow'],
+          ['Dubai', 'flights to Dubai tomorrow'],
+          ['New York', 'flights to New York tomorrow'],
+          ['Mumbai', 'flights to Mumbai tomorrow'],
+          ['Paris', 'flights to Paris tomorrow'],
+          ['Singapore', 'flights to Singapore tomorrow'],
+          ['Other city…', '__prompt__:flights to  tomorrow'],
+        ],
+      },
+      'departures-d2': {
+        label: 'Day after tomorrow — top destinations',
+        items: [
+          ['All T2', 'departures from T2 day after tomorrow'],
+          ['All T3', 'departures from T3 day after tomorrow'],
+          ['All T4', 'departures from T4 day after tomorrow'],
+          ['All T5', 'departures from T5 day after tomorrow'],
+          ['Dubai', 'flights to Dubai day after tomorrow'],
+          ['New York', 'flights to New York day after tomorrow'],
+          ['Mumbai', 'flights to Mumbai day after tomorrow'],
+          ['Other city…', '__prompt__:flights to  day after tomorrow'],
+        ],
+      },
+      'departures-d3': {
+        label: 'In 3 days — top destinations',
+        items: [
+          ['All T5', 'departures from T5 in 3 days'],
+          ['All T3', 'departures from T3 in 3 days'],
+          ['Dubai', 'flights to Dubai in 3 days'],
+          ['New York', 'flights to New York in 3 days'],
+          ['Mumbai', 'flights to Mumbai in 3 days'],
+          ['Other city…', '__prompt__:flights to  in 3 days'],
+        ],
+      },
+      'departures-d7': {
+        label: 'In 1 week — top destinations',
+        items: [
+          ['All T5', 'departures from T5 in 7 days'],
+          ['All T3', 'departures from T3 in 7 days'],
+          ['Dubai', 'flights to Dubai in 7 days'],
+          ['New York', 'flights to New York in 7 days'],
+          ['Mumbai', 'flights to Mumbai in 7 days'],
+          ['Other city…', '__prompt__:flights to  in 7 days'],
         ],
       },
       't2-dest': {
