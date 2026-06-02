@@ -99,6 +99,60 @@
     }
     .chip:hover { background: var(--lhr-navy); color: #fff; border-color: var(--lhr-navy); transform: translateY(-1px); }
     .chip:active { transform: translateY(0); }
+    .chip.active { background: var(--lhr-red); color: #fff; border-color: var(--lhr-red); }
+
+    /* SUB-CHIP BAR ======================================== */
+    .sub-bar {
+      background: linear-gradient(180deg, #fff, var(--lhr-cream));
+      border-bottom: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      animation: slide-down 0.2s ease both;
+      align-items: center;
+    }
+    .sub-bar.hide { display: none; }
+    .sub-bar::-webkit-scrollbar { display: none; }
+    .sub-bar .sub-label {
+      font-size: 12px;
+      color: var(--lhr-navy);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+    .sub-chip {
+      background: #fff;
+      border: 1px solid var(--lhr-blue-soft);
+      color: var(--lhr-navy);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .sub-chip:hover { background: var(--lhr-blue-soft); color: #fff; transform: translateY(-1px); }
+    .sub-close {
+      margin-left: auto;
+      background: transparent;
+      border: none;
+      color: var(--text-soft);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 8px;
+      line-height: 1;
+    }
+    .sub-close:hover { color: var(--lhr-red); }
+    @keyframes slide-down {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     /* CHAT ============================================== */
     #chat {
@@ -276,17 +330,18 @@
   </header>
 
   <div class="chip-bar" id="chips">
-    <button class="chip" data-q="My flight status">✈️ Flight status</button>
-    <button class="chip" data-q="Lounges in T5">🛋️ Lounges</button>
-    <button class="chip" data-q="Security wait T5">🔒 Security wait</button>
-    <button class="chip" data-q="BA economy baggage">🧳 Baggage allowance</button>
-    <button class="chip" data-q="BA check-in">⏰ Check-in times</button>
-    <button class="chip" data-q="Heathrow Express cost">🚆 Transport</button>
-    <button class="chip" data-q="What can I bring on the plane">📦 What can I bring</button>
-    <button class="chip" data-q="Wheelchair assistance">♿ Special assistance</button>
-    <button class="chip" data-q="Long stay parking">🅿️ Parking</button>
-    <button class="chip" data-q="Where is the prayer room">📍 Facilities</button>
+    <button class="chip" data-sub="departures">🛫 Departures by city</button>
+    <button class="chip" data-sub="arrivals">🛬 Arrivals</button>
+    <button class="chip" data-sub="lounges">🛋️ Lounges</button>
+    <button class="chip" data-sub="security">🔒 Security wait</button>
+    <button class="chip" data-sub="trains">🚆 Trains to London</button>
+    <button class="chip" data-sub="customs">💷 Customs / VAT</button>
+    <button class="chip" data-sub="baggage">🧳 Baggage allowance</button>
+    <button class="chip" data-q="any disruptions today">⚠️ Disruptions</button>
+    <button class="chip" data-q="help">❓ Help</button>
   </div>
+
+  <div class="sub-bar hide" id="subs"></div>
 
   <div id="chat"></div>
 
@@ -382,10 +437,170 @@
       if (text) send(text);
     };
 
+    const subs = document.getElementById('subs');
+
+    const SUB_MENUS = {
+      departures: {
+        label: 'Where to?',
+        items: [
+          ['Dubai', 'flights to Dubai'],
+          ['New York', 'flights to New York'],
+          ['Mumbai', 'flights to Mumbai'],
+          ['Delhi', 'flights to Delhi'],
+          ['Bangalore', 'flights to Bangalore'],
+          ['Singapore', 'flights to Singapore'],
+          ['Hong Kong', 'flights to Hong Kong'],
+          ['Tokyo', 'flights to Tokyo'],
+          ['Paris', 'flights to Paris'],
+          ['Frankfurt', 'flights to Frankfurt'],
+          ['Amsterdam', 'flights to Amsterdam'],
+          ['Sydney', 'flights to Sydney'],
+          ['Los Angeles', 'flights to Los Angeles'],
+          ['Doha', 'flights to Doha'],
+          ['Other city…', '__prompt__:flights to '],
+        ],
+      },
+      arrivals: {
+        label: 'Arriving flight number:',
+        items: [
+          ['Type flight no.', '__prompt__:when does  land'],
+          ['BA178 (NYC→LHR)', 'when does BA178 land'],
+          ['AF1680 (CDG→LHR)', 'when does AF1680 land'],
+          ['EK3 (DXB→LHR)', 'when does EK3 land'],
+          ['VS4 (JFK→LHR)', 'when does VS4 land'],
+        ],
+      },
+      lounges: {
+        label: 'Which terminal or card?',
+        items: [
+          ['Terminal 2', 'lounges in T2'],
+          ['Terminal 3', 'lounges in T3'],
+          ['Terminal 4', 'lounges in T4'],
+          ['Terminal 5', 'lounges in T5'],
+          ['Amex Platinum', 'lounges with Amex Platinum'],
+          ['HSBC Premier', 'lounges with HSBC Premier'],
+          ['Barclays', 'lounges with Barclays'],
+          ['Chase Sapphire', 'lounges with Chase Sapphire'],
+          ['Revolut', 'lounges with Revolut'],
+          ['Priority Pass', 'lounges with Priority Pass'],
+        ],
+      },
+      security: {
+        label: 'Which terminal?',
+        items: [
+          ['Terminal 2', 'security wait T2'],
+          ['Terminal 3', 'security wait T3'],
+          ['Terminal 4', 'security wait T4'],
+          ['Terminal 5', 'security wait T5'],
+          ['All terminals', 'security waits'],
+        ],
+      },
+      trains: {
+        label: 'Which service?',
+        items: [
+          ['Heathrow Express', 'Heathrow Express price'],
+          ['Elizabeth line', 'Elizabeth line to Paddington'],
+          ['Piccadilly line', 'Piccadilly line ticket'],
+          ['Compare all', 'train to central London'],
+        ],
+      },
+      customs: {
+        label: 'What do you need?',
+        items: [
+          ['Arriving in UK', 'UK customs allowance arriving'],
+          ['Leaving UK', 'leaving UK customs'],
+          ['Alcohol limit', 'alcohol allowance UK'],
+          ['Tobacco limit', 'tobacco allowance UK'],
+          ['Duty-free shopping', 'duty-free at Heathrow'],
+          ['VAT refund', 'VAT refund at Heathrow'],
+        ],
+      },
+      baggage: {
+        label: 'Which airline?',
+        items: [
+          ['British Airways', 'BA economy baggage'],
+          ['Lufthansa', 'Lufthansa economy baggage'],
+          ['Emirates', 'Emirates economy baggage'],
+          ['Virgin Atlantic', 'Virgin Atlantic economy baggage'],
+          ['Air France', 'Air France economy baggage'],
+          ['KLM', 'KLM economy baggage'],
+          ['Qatar Airways', 'Qatar economy baggage'],
+          ['Singapore Airlines', 'Singapore Airlines economy baggage'],
+        ],
+      },
+    };
+
+    function clearActive() {
+      document.querySelectorAll('.chip.active').forEach((c) => c.classList.remove('active'));
+    }
+
+    function hideSubs() {
+      subs.classList.add('hide');
+      subs.innerHTML = '';
+      clearActive();
+    }
+
+    function showSubs(menuKey, sourceChip) {
+      const menu = SUB_MENUS[menuKey];
+      if (!menu) return;
+      subs.innerHTML = '';
+      const label = document.createElement('div');
+      label.className = 'sub-label';
+      label.textContent = menu.label;
+      subs.appendChild(label);
+      for (const [text, q] of menu.items) {
+        const b = document.createElement('button');
+        b.className = 'sub-chip';
+        b.textContent = text;
+        b.dataset.q = q;
+        subs.appendChild(b);
+      }
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'sub-close';
+      closeBtn.innerHTML = '&times;';
+      closeBtn.title = 'Close';
+      closeBtn.addEventListener('click', hideSubs);
+      subs.appendChild(closeBtn);
+      subs.classList.remove('hide');
+      clearActive();
+      if (sourceChip) sourceChip.classList.add('active');
+    }
+
     chips.addEventListener('click', (e) => {
       const chip = e.target.closest('.chip');
       if (!chip) return;
+      const subKey = chip.dataset.sub;
+      if (subKey) {
+        if (chip.classList.contains('active')) {
+          hideSubs();
+        } else {
+          showSubs(subKey, chip);
+        }
+        return;
+      }
       const q = chip.dataset.q;
+      if (q) {
+        hideSubs();
+        send(q);
+      }
+    });
+
+    subs.addEventListener('click', (e) => {
+      const sc = e.target.closest('.sub-chip');
+      if (!sc) return;
+      const q = sc.dataset.q;
+      if (!q) return;
+      if (q.startsWith('__prompt__:')) {
+        const tpl = q.slice('__prompt__:'.length);
+        input.value = tpl;
+        input.focus();
+        const caretPos = tpl.indexOf(' land') > -1
+          ? tpl.indexOf(' land')
+          : tpl.length;
+        try { input.setSelectionRange(caretPos, caretPos); } catch (_) {}
+        return;
+      }
+      hideSubs();
       send(q);
     });
 
