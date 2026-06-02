@@ -255,7 +255,7 @@ def _respond_en(msg: str) -> str:
         return flight_status(fn.group(1) + fn.group(2), mode="arrival" if is_arrival else "departure")
 
     for airline, info in AIRLINES.items():
-        if airline.lower() in m and any(k in m for k in ["terminal", "where", "check in", "gate"]):
+        if re.search(r"\b" + re.escape(airline.lower()) + r"\b", m) and any(k in m for k in ["terminal", "where", "check in", "gate"]):
             return find_terminal(airline, info)
 
     fuzzy_air = _fuzzy_find(m, list(AIRLINES.keys()))
@@ -266,11 +266,20 @@ def _respond_en(msg: str) -> str:
         return flight_status(fn.group(1) + fn.group(2))
 
     for airline, info in AIRLINES.items():
-        if airline.lower() in m:
+        if re.search(r"\b" + re.escape(airline.lower()) + r"\b", m):
             return find_terminal(airline, info)
 
     if fuzzy_air:
         return find_terminal(fuzzy_air, AIRLINES[fuzzy_air])
+
+    cleaned = msg.strip(" ?.,!").strip()
+    if cleaned and len(cleaned.split()) <= 3:
+        city, iatas = _resolve_destination(cleaned)
+        if iatas:
+            return (
+                f"Looking up flights from Heathrow to **{city.title()}**...\n\n"
+                + handle_destination(cleaned)
+            )
 
     return help_msg()
 
@@ -560,6 +569,7 @@ DEST_CACHE_TTL = 900
 
 def _resolve_destination(text: str):
     t = text.lower().strip(" ?.,!")
+    t_nospace = t.replace(" ", "").replace("-", "")
     iata_upper = text.upper().strip(" ?.,!")
     if re.fullmatch(r"[A-Z]{3}", iata_upper) and iata_upper in ALL_IATAS:
         for city, iatas in CITY_TO_IATA.items():
@@ -570,6 +580,14 @@ def _resolve_destination(text: str):
         t = CITY_ALIASES[t]
     if t in CITY_TO_IATA:
         return t, CITY_TO_IATA[t]
+    for city in CITY_TO_IATA:
+        city_nospace = city.replace(" ", "").replace("-", "")
+        if city_nospace == t_nospace:
+            return city, CITY_TO_IATA[city]
+    for alias, city in CITY_ALIASES.items():
+        alias_nospace = alias.replace(" ", "").replace("-", "")
+        if alias_nospace == t_nospace:
+            return city, CITY_TO_IATA[city]
     for city in CITY_TO_IATA:
         if city in t or t in city:
             return city, CITY_TO_IATA[city]
@@ -1020,6 +1038,12 @@ def flight_status(fn: str, mode: str = "departure"):
         return hit[1] + "\n\n*(cached)*"
 
     lhr = _flight_from_lhr(fn, mode)
+    if not lhr:
+        other_mode = "arrival" if mode == "departure" else "departure"
+        alt = _flight_from_lhr(fn, other_mode)
+        if alt:
+            lhr = alt
+            mode = other_mode
     if lhr:
         if mode == "departure":
             extra = ""
