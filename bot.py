@@ -30,6 +30,10 @@ CARDS = _load("cards.json")
 VAT_DUTY = _load("vat_duty_free.json")
 UK_CUSTOMS = _load("uk_customs.json")
 TRAINS = _load("trains.json")
+CITIES = _load("cities.json")
+CITY_TO_IATA = {k.lower(): v for k, v in CITIES["cities"].items()}
+CITY_ALIASES = {k.lower(): v.lower() for k, v in CITIES["aliases"].items()}
+ALL_IATAS = {iata for iatas in CITY_TO_IATA.values() for iata in iatas}
 CONNECTIONS = _load("connections.json")
 FACILITIES = _load("facilities.json")
 BAGGAGE = _load("baggage.json")
@@ -172,6 +176,12 @@ def _respond_en(msg: str) -> str:
     if not msg:
         return "Hi! What can I help you with?"
     m = " " + re.sub(r"[^\w\s-]", " ", msg.lower().strip()) + " "
+
+    dest_match = re.search(r"(?:flights?\s+(?:to|for)|departures?\s+to|next\s+flight\s+to|going\s+to|flying\s+to|fly\s+to|travel\s+to)\s+(.+?)(?:\s+today|\s+tomorrow|\s+now|[\?\.!]|$)", m, re.I)
+    if dest_match and not re.search(r"\b[A-Z]{2,3}\s?\d{1,4}\b", msg.upper()):
+        dest_text = dest_match.group(1).strip()
+        if dest_text and dest_text not in ("uk", "the uk", "central london", "london", "paddington"):
+            return handle_destination(dest_text)
 
     _fn_early = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
     _arr_keys = ["arriv", "land", "landing", "lands", "baggage belt", "baggage reclaim", "pick up", "picking up", "pickup"]
@@ -543,6 +553,118 @@ def handle_trains(m: str):
         f"**Fares:**\n{fares}\n\n"
         f"**Tips:**\n{tips}"
     )
+
+
+DEST_CACHE_TTL = 900
+
+
+def _resolve_destination(text: str):
+    t = text.lower().strip(" ?.,!")
+    iata_upper = text.upper().strip(" ?.,!")
+    if re.fullmatch(r"[A-Z]{3}", iata_upper) and iata_upper in ALL_IATAS:
+        for city, iatas in CITY_TO_IATA.items():
+            if iata_upper in iatas:
+                return city, [iata_upper]
+        return iata_upper.lower(), [iata_upper]
+    if t in CITY_ALIASES:
+        t = CITY_ALIASES[t]
+    if t in CITY_TO_IATA:
+        return t, CITY_TO_IATA[t]
+    for city in CITY_TO_IATA:
+        if city in t or t in city:
+            return city, CITY_TO_IATA[city]
+    for alias, city in CITY_ALIASES.items():
+        if alias in t:
+            return city, CITY_TO_IATA[city]
+    return None, []
+
+
+def _fetch_dep_to(arr_iata: str):
+    if not AVIA_KEY:
+        return None
+    cache_key = f"dep_to:{arr_iata}"
+    now = time.time()
+    hit = _cache.get(cache_key)
+    if hit and now - hit[0] < DEST_CACHE_TTL:
+        return hit[1]
+    try:
+        r = requests.get(
+            "http://api.aviationstack.com/v1/flights",
+            params={"access_key": AVIA_KEY, "dep_iata": "LHR", "arr_iata": arr_iata, "limit": 20},
+            timeout=10,
+        )
+        body = r.json()
+        if body.get("error"):
+            return None
+        data = body.get("data") or []
+        _cache[cache_key] = (now, data)
+        return data
+    except Exception:
+        return None
+
+
+def handle_destination(text: str):
+    if not AVIA_KEY:
+        return "Live flight search needs an Aviationstack key. Set `AVIATIONSTACK_KEY` in `.env`."
+    city, iatas = _resolve_destination(text)
+    if not iatas:
+        return (
+            f"I don't recognise **{text}** as a destination from Heathrow. "
+            "Try a major city name (e.g. *'flights to Dubai'*, *'flights to Mumbai'*) "
+            "or a 3-letter airport code (e.g. *'flights to JFK'*)."
+        )
+    iatas = iatas[:3]
+    flights = []
+    for iata in iatas:
+        data = _fetch_dep_to(iata)
+        if data:
+            for f in data:
+                flights.append((iata, f))
+    if not flights:
+        return f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}) on today's schedule. Try the Heathrow live departure board."
+    from datetime import datetime, timezone
+    now_utc = datetime.now(timezone.utc)
+    enriched = []
+    for iata, f in flights:
+        dep = f.get("departure") or {}
+        sched = (dep.get("scheduled") or "")[:19]
+        try:
+            ts = datetime.fromisoformat(sched).replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+        if ts < now_utc - __import__("datetime").timedelta(minutes=30):
+            continue
+        enriched.append((ts, iata, f))
+    enriched.sort(key=lambda x: x[0])
+    enriched = enriched[:8]
+    if not enriched:
+        return f"All flights to **{city.title()}** for today appear to have already departed. Check the Heathrow live board for tomorrow's schedule."
+    multi_airport = len(iatas) > 1
+    header = f"**Today's flights from Heathrow to {city.title()}**"
+    if multi_airport:
+        header += f" (airports: {', '.join(iatas)})"
+    lines = [header, ""]
+    for ts, iata, f in enriched:
+        dep = f.get("departure") or {}
+        fn = (f.get("flight") or {}).get("iata") or "?"
+        airline = (f.get("airline") or {}).get("name") or "?"
+        sched_hhmm = (dep.get("scheduled") or "")[11:16] or "?"
+        est_hhmm = (dep.get("estimated") or "")[11:16]
+        terminal = dep.get("terminal") or "?"
+        gate = dep.get("gate") or "TBA"
+        status = (f.get("flight_status") or "scheduled").title()
+        delay = dep.get("delay") or 0
+        dest_label = f" → {iata}" if multi_airport else ""
+        time_str = sched_hhmm
+        if est_hhmm and est_hhmm != sched_hhmm:
+            time_str = f"{sched_hhmm} (est {est_hhmm})"
+        delay_str = f" • {delay} min delay" if delay and delay > 0 else ""
+        lines.append(
+            f"- **{time_str}** — **{fn}** {airline} • T{terminal} • Gate {gate} • {status}{delay_str}{dest_label}"
+        )
+    lines.append("")
+    lines.append(f"*Tip:* Ask *'{enriched[0][2].get('flight', {}).get('iata', 'BA177')} status'* for full details on a specific flight, or *'when does {enriched[0][2].get('flight', {}).get('iata', 'BA177')} depart'* for the live gate update.")
+    return "\n".join(lines)
 
 
 def handle_disruptions():
