@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1>Privacy Policy</h1>
+<div class="updated">Last updated: 2 June 2026</div>
+
+<p>This Privacy Policy explains how Heathrow Helper ("we", "the service") handles your information when you use this website.</p>
+
+<h2>1. What we collect</h2>
+<ul>
+  <li><strong>Chat messages you send.</strong> Each message is sent to our server in order to generate a reply. Messages are processed in memory to match intent and are not written to a persistent database.</li>
+  <li><strong>Standard server logs.</strong> Our hosting provider (Render) and our CDN (Cloudflare) automatically record technical metadata such as IP address, request time, user agent and referrer for the purpose of operating, securing and debugging the service. Typical retention is 14-30 days.</li>
+  <li><strong>Local-storage chat history.</strong> Recent messages and replies may be stored in your browser's local storage on your device, only to restore the conversation if you reload the page. This data is never transmitted to us and you can clear it at any time by clearing your browser data.</li>
+</ul>
+
+<h2>2. What we do <em>not</em> collect</h2>
+<ul>
+  <li>We do not require account creation, sign-in, or any personal identifiers.</li>
+  <li>We do not use third-party analytics, advertising trackers, or fingerprinting scripts.</li>
+  <li>We do not sell, share or rent your data to third parties.</li>
+</ul>
+
+<h2>3. Third-party services</h2>
+<p>To answer your questions the service contacts the following third parties:</p>
+<ul>
+  <li><strong>Heathrow Airport's public APIs</strong> (api-dp-prod.dp.heathrow.com) — flight, security and immigration wait data.</li>
+  <li><strong>AviationStack</strong> (api.aviationstack.com) — fallback flight data for non-LHR routes.</li>
+  <li><strong>Google Translate</strong> (via the open-source <code>deep-translator</code> library) — optional translation of replies into your detected language. Only the message text is transmitted.</li>
+  <li><strong>Google Fonts</strong> (fonts.googleapis.com) — for the Inter font used on this site.</li>
+  <li><strong>jsDelivr CDN</strong> — to load the markdown rendering libraries used in the chat.</li>
+</ul>
+<p>These services have their own privacy policies; we recommend you review them if you are concerned.</p>
+
+<h2>4. Cookies</h2>
+<p>We do not set any tracking cookies. Cloudflare may set a small number of strictly-necessary cookies to provide security and routing.</p>
+
+<h2>5. Your rights (UK / EU)</h2>
+<p>Because we do not store personal data beyond short-lived hosting logs, there is generally no profile to access, correct, or delete. If you have a specific concern (for example you believe your IP address appears in our logs for a security investigation), contact us via the <a href="/contact">contact page</a> and we will respond within 30 days.</p>
+
+<h2>6. Children</h2>
+<p>This service is not directed at children under 13 and we do not knowingly collect data from them.</p>
+
+<h2>7. Changes</h2>
+<p>We may update this policy occasionally. The "Last updated" date above will reflect any change.</p>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{% block content %}
+<h1>About Heathrow Helper</h1>
+<div class="updated">Last updated: 2 June 2026</div>
+
+<p><strong>Heathrow Helper</strong> is an unofficial passenger assistant for London Heathrow Airport (LHR). It is built to help travellers — particularly first-time fliers and older passengers — quickly find answers about flights, terminals, lounges, security, transport and customs without having to know an airline's flight number or open multiple apps.</p>
+
+<h2>What it does</h2>
+<ul>
+  <li><strong>Live flight status</strong> — departures and arrivals from Heathrow's own live board, including delays, gate states (Gate Open / Boarding / Flight Closing / Gate Closed), cancellations and baggage belts.</li>
+  <li><strong>Search by destination</strong> — "flights to Dubai", "flights from T3 to New York" — no need to know flight numbers.</li>
+  <li><strong>Smart connection check</strong> — paste two flight numbers, get a verdict on whether your layover is realistic, with alliance-specific minimum connection times.</li>
+  <li><strong>Lounges and credit-card access</strong> — accurate lounge listings per terminal plus card-specific access (Amex, HSBC, Barclays, Chase, Capital One, Revolut, Priority Pass, LoungeKey, DragonPass).</li>
+  <li><strong>Live security and immigration wait times</strong> from Heathrow's official feed.</li>
+  <li><strong>Disruption alerts</strong> scraped from Heathrow's homepage banner.</li>
+  <li><strong>Transport, customs, VAT, parking, baggage, special assistance and more.</strong></li>
+</ul>
+
+<h2>Where the data comes from</h2>
+<p>Most live data is pulled directly from <strong>Heathrow Airport's own public APIs</strong> — the same source that powers the live boards on heathrow.com and the Heathrow app. Static data (lounge details, transport fares, customs allowances, credit-card lounge programs) is curated by hand and reviewed periodically.</p>
+<p>For flights that operate between non-LHR airports (used in connection checks), the bot falls back to <a href="https://aviationstack.com/" rel="nofollow">AviationStack</a>.</p>
+
+<h2>Not affiliated with Heathrow Airport</h2>
+<p>This is an independent project. Heathrow Helper is <strong>not</strong> affiliated with, endorsed by or operated by Heathrow Airport Limited or LHR Airports Limited. The "LHR" mark and any references to Heathrow are used descriptively to identify the airport being served.</p>
+<p>Always confirm critical travel information (gate, departure time, cancellation, customs) with your airline and the official Heathrow channels before acting on it.</p>
+
+<h2>Contact</h2>
+<p>For feedback, corrections, or bug reports, see the <a href="/contact">contact page</a>.</p>
+{% endblock %}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="34" fill="#d22730"/>
+  <text x="90" y="108" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="58" fill="#ffffff" letter-spacing="2">LHR</text>
+  <rect x="0" y="158" width="180" height="8" fill="#0c1d3a"/>
+  <rect x="63" y="158" width="54" height="8" fill="#c9a96e"/>
+</svg>
