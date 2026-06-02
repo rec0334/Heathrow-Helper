@@ -1,0 +1,60 @@
+{
+  "heathrow_express": {
+    "name": "Heathrow Express",
+    "route": "Heathrow Central (T2/T3) and T5 to London Paddington",
+    "journey_time": "15 minutes from T2/T3 to Paddington; 21 minutes from T5",
+    "frequency": "Every 15 minutes during the day (~05:00 to 23:30)",
+    "fares_gbp": {
+      "express_saver_advance": "From £15 if booked 90+ days ahead",
+      "express_advance": "From £22 if booked the day before or earlier",
+      "express_off_peak": "£25 (single, off-peak walk-up)",
+      "express_anytime": "£32 (single, peak walk-up)",
+      "first_class": "From £42 single",
+      "children_under_16": "Free with paying adult"
+    },
+    "tickets": "Buy at heathrowexpress.com, on the platform, via the app, or by tapping a contactless card at the gate.",
+    "stations": ["Heathrow Terminal 5", "Heathrow Central (T2 and T3)", "London Paddington"],
+    "tips": [
+      "T4 passengers transfer free to Heathrow Central via the Elizabeth line or shuttle.",
+      "Children 15 and under travel free with a paying adult.",
+      "Tap-in / tap-out with contactless is fastest if you're not booking in advance."
+    ]
+  },
+  "elizabeth_line": {
+    "name": "Elizabeth line",
+    "route": "All Heathrow terminals to London Paddington, central London (Bond Street, Tottenham Court Road, Liverpool Street), Canary Wharf, and east to Abbey Wood / Shenfield",
+    "journey_time": "Around 30 minutes from Heathrow to Paddington; 40 minutes to central London (Bond Street)",
+    "frequency": "Every 5-10 minutes during the day",
+    "fares_gbp": {
+      "off_peak_paddington": "£12.80",
+      "peak_paddington": "£14.40",
+      "off_peak_central_london": "£12.80-£13.60"
+    },
+    "tickets": "Tap a contactless / Apple Pay / Google Pay card at the gates — same Oyster pay-as-you-go system. No need to buy a ticket in advance.",
+    "stations": ["Heathrow Terminal 4", "Heathrow Terminals 2 and 3", "Heathrow Terminal 5", "Hayes & Harlington", "Paddington", "Bond Street", "Tottenham Court Road", "Liverpool Street", "Canary Wharf"],
+    "tips": [
+      "Cheapest mainline option from Heathrow to central London.",
+      "Direct to multiple central London stops — no change at Paddington.",
+      "Last train varies by line — typically around midnight."
+    ]
+  },
+  "piccadilly_line": {
+    "name": "Piccadilly line (London Underground)",
+    "route": "All Heathrow terminals to central London via South Kensington, Knightsbridge, Hyde Park Corner, Piccadilly Circus, Leicester Square, Covent Garden, Holborn, King's Cross",
+    "journey_time": "Around 50-55 minutes Heathrow to central London (Piccadilly Circus)",
+    "frequency": "Every 5-10 minutes during the day",
+    "fares_gbp": {
+      "single_off_peak": "£3.50-£6.00 depending on destination",
+      "single_peak": "£5.60-£6.30",
+      "daily_cap_zones_1_to_6": "£15.90 with contactless / Oyster"
+    },
+    "tickets": "Tap a contactless card / Apple Pay / Google Pay at the gates. No paper ticket needed.",
+    "stations": ["Heathrow Terminal 5", "Heathrow Terminals 2 and 3", "Heathrow Terminal 4", "+ all central London stops"],
+    "tips": [
+      "Cheapest option but slowest.",
+      "Direct service to many central London stops with no change.",
+      "Check live status — Piccadilly line has periodic strikes and engineering works."
+    ]
+  },
+  "comparison": "**Fastest / most expensive:** Heathrow Express (15 min to Paddington, £25-32 walk-up). **Best value:** Elizabeth line (~30 min, ~£13). **Cheapest:** Piccadilly line (~55 min, ~£6)."
+}

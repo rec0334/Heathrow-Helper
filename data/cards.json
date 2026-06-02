@@ -1,0 +1,82 @@
+{
+  "amex platinum": {
+    "full_name": "American Express Platinum (UK)",
+    "programs": ["Priority Pass", "Amex Centurion"],
+    "notes": "Cardholder + 1 guest free. Unlimited visits. Worldwide via Priority Pass; Amex Centurion Lounge at T3 direct."
+  },
+  "amex centurion": {
+    "full_name": "American Express Centurion ('Black') (UK)",
+    "programs": ["Priority Pass", "Amex Centurion"],
+    "notes": "Cardholder + unlimited guests. Premium Amex card by invitation."
+  },
+  "amex business platinum": {
+    "full_name": "American Express Business Platinum (UK)",
+    "programs": ["Priority Pass", "Amex Centurion"],
+    "notes": "Same lounge benefits as personal Platinum."
+  },
+  "amex gold": {
+    "full_name": "American Express Gold (UK)",
+    "programs": [],
+    "notes": "No complimentary Heathrow lounge access (Priority Pass benefit was discontinued)."
+  },
+  "hsbc premier world elite": {
+    "full_name": "HSBC Premier World Elite Mastercard (UK)",
+    "programs": ["DragonPass"],
+    "notes": "Includes DragonPass membership (typically 6 visits/year). Use at Plaza Premium and Aspire/No.1 lounges."
+  },
+  "barclays avios plus": {
+    "full_name": "Barclays Avios Plus Mastercard (UK)",
+    "programs": [],
+    "notes": "BA Avios earning card. No complimentary Heathrow lounge access."
+  },
+  "natwest premier reward black": {
+    "full_name": "NatWest Premier Reward Black (UK)",
+    "programs": [],
+    "notes": "No included lounge access. Cardholders can buy Priority Pass separately."
+  },
+  "revolut ultra": {
+    "full_name": "Revolut Ultra",
+    "programs": ["LoungeKey"],
+    "notes": "Includes LoungeKey passes (limited annual visits, check Revolut for current allowance)."
+  },
+  "revolut metal": {
+    "full_name": "Revolut Metal",
+    "programs": ["LoungeKey"],
+    "notes": "LoungeKey passes via DragonPass partner (limited; check Revolut)."
+  },
+  "virgin atlantic reward+": {
+    "full_name": "Virgin Atlantic Reward+ Mastercard (UK)",
+    "programs": ["Virgin Atlantic Reward+ Mastercard"],
+    "notes": "1 complimentary Virgin Atlantic Clubhouse visit per year (T3 Heathrow, departing only). Spend threshold may apply."
+  },
+  "chase sapphire reserve": {
+    "full_name": "Chase Sapphire Reserve (US)",
+    "programs": ["Priority Pass"],
+    "notes": "Priority Pass Select — cardholder only after 2025 changes; guests at additional cost."
+  },
+  "capital one venture x": {
+    "full_name": "Capital One Venture X (US)",
+    "programs": ["Priority Pass"],
+    "notes": "Unlimited Priority Pass visits for cardholder + 2 guests."
+  },
+  "amex platinum us": {
+    "full_name": "American Express Platinum (US)",
+    "programs": ["Priority Pass", "Amex Centurion"],
+    "notes": "Includes Priority Pass + Centurion Lounge access. Cardholder + 2 guests."
+  },
+  "priority pass": {
+    "full_name": "Priority Pass (standalone membership)",
+    "programs": ["Priority Pass"],
+    "notes": "Direct membership — buy plan from prioritypass.com. Tiers: Standard / Standard Plus / Prestige."
+  },
+  "loungekey": {
+    "full_name": "LoungeKey (standalone)",
+    "programs": ["LoungeKey"],
+    "notes": "Usually bundled with Mastercard premium products; not sold direct."
+  },
+  "dragonpass": {
+    "full_name": "DragonPass (standalone membership)",
+    "programs": ["DragonPass"],
+    "notes": "Direct membership or via cards like HSBC Premier WE Mastercard."
+  }
+}

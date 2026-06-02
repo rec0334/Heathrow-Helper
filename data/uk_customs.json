@@ -1,0 +1,42 @@
+{
+  "arriving_uk": {
+    "headline": "UK customs allowances — arriving from outside the UK",
+    "personal_goods": {
+      "limit_gbp": 390,
+      "note": "Personal goods (other than alcohol and tobacco) up to £390 in value per person, declared on the green channel. £270 if you arrive by private boat or small plane (not a scheduled commercial flight)."
+    },
+    "alcohol": [
+      "Spirits over 22% ABV: 4 litres",
+      "Sparkling wine, fortified wine (under 22% ABV): 9 litres",
+      "Still wine: 18 litres",
+      "Beer: 42 litres",
+      "You can split the spirits allowance — e.g. 2L spirits + 4.5L sparkling wine."
+    ],
+    "tobacco": [
+      "Cigarettes: 200",
+      "Cigarillos: 100",
+      "Cigars: 50",
+      "Loose tobacco: 250g",
+      "You can split — e.g. 100 cigarettes + 25 cigars."
+    ],
+    "cash": "Cash equivalent of £10,000 or more must be declared on entry to the UK (one form per person or family).",
+    "prohibited": [
+      "Meat, dairy, and certain other animal products from outside the EU (limited exceptions for personal supply of baby formula/medical/special dietary).",
+      "Live animals / endangered species (CITES) without proper paperwork.",
+      "Plants, seeds, or cuttings without a phytosanitary certificate (defra rules).",
+      "Counterfeit goods, indecent/obscene material, controlled drugs.",
+      "Offensive weapons and self-defence sprays (e.g. pepper spray)."
+    ],
+    "where_to_declare": "Use the red channel at customs if you exceed any allowance or carry anything to declare. There are e-declaration options at heathrow.com/customs."
+  },
+  "leaving_uk": {
+    "headline": "Leaving the UK — what you can take",
+    "note": "There are generally no UK-side limits on what you can take OUT (apart from controlled goods like weapons, drugs, certain meds). Your destination country sets the import limits.",
+    "tips": [
+      "Tax-free shopping for tourists no longer applies in the UK (since 1 January 2021).",
+      "Duty-free at the airport (airside) is still tax-removed — but only useful within your destination's allowance.",
+      "If you bought VAT-refundable items in shops thinking the airport would refund, there is no such desk. Confirm with retailer.",
+      "Going to the EU? EU customs treat you as arriving from a third country. Check the EU allowance for your destination country."
+    ]
+  }
+}

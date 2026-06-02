@@ -1,0 +1,19 @@
+{
+  "vat_refund": {
+    "headline": "VAT refund (tax-free shopping) for tourists at Heathrow",
+    "status": "UK abolished VAT-free shopping for visitors leaving the UK on 1 January 2021. There is currently NO VAT refund scheme for personal goods bought on the UK high street that you take home in your luggage.",
+    "what_still_works": [
+      "Duty-free shopping at Heathrow airside (after security): goods bought in duty-free stores at the airport already have VAT removed at point of sale.",
+      "Tax-free for business: VAT refunds may still apply for business invoices via HMRC processes (not airport desks).",
+      "Goods shipped abroad directly by the retailer can still be sold VAT-free in some cases."
+    ],
+    "where_to_ask": "If you bought something in the UK high street believing it would be VAT-refunded, ask the retailer directly. There are no Travelex / Premier Tax Free / Global Blue refund desks at Heathrow for personal high-street purchases.",
+    "tip": "If your destination country (e.g. EU) charges you VAT on arrival above their personal allowance, you may owe tax there. Keep receipts."
+  },
+  "duty_free": {
+    "headline": "Duty-free shopping at Heathrow",
+    "info": "Duty-free stores are airside (after security) in every terminal — including World Duty Free flagship at T5, plus T2, T3, T4. Alcohol and tobacco have duty removed (subject to your destination country's allowance), and other goods (perfume, cosmetics, sunglasses, watches) are sold at airport pricing with VAT removed for non-UK destinations.",
+    "reserve_collect": "You can reserve items online via Heathrow's Reserve & Collect service and pick up at the airport — no duplicate carry-on hassle.",
+    "limits_warning": "Always check what your destination country allows you to bring in. EU is now an 'outside UK' destination — so EU customs allowances apply when you land in the EU."
+  }
+}

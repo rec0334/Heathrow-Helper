@@ -1,43 +1,77 @@
 {
-  "same_terminal": {
-    "mct_min": 60,
-    "method": "Stay airside. Follow signs to your departure gate. Allow extra time if you need a passport check on arrival.",
-    "notes": "Same-terminal connections are the simplest. 45 min may be possible for some short-haul-to-short-haul transfers, but 60 min is the safe minimum."
+  "terminal_pairs": {
+    "same_terminal": {
+      "mct_min": 60,
+      "method": "Stay airside. Follow signs to your departure gate.",
+      "notes": "Same-terminal connections are the simplest. 45 min may be possible for short-haul to short-haul, but 60 min is the safe minimum."
+    },
+    "T2-T3": {
+      "mct_min": 75,
+      "method": "Walking link between Terminal 2 and Terminal 3 (about 10 minutes via the underground walkway).",
+      "notes": "T2 and T3 are physically very close. No transit train needed."
+    },
+    "T2-T4": {
+      "mct_min": 120,
+      "method": "Take the free Heathrow transfer train (or Elizabeth line) between terminals. Allow 15-20 minutes for the transit.",
+      "notes": "Furthest pairing. Build in plenty of buffer."
+    },
+    "T2-T5": {
+      "mct_min": 90,
+      "method": "Take the free Heathrow transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
+      "notes": "Common BA connection if your inbound was a Star Alliance flight to T2."
+    },
+    "T3-T4": {
+      "mct_min": 120,
+      "method": "Take the free Heathrow transfer train (or Elizabeth line) between Central and T4. Transit is about 10-15 minutes.",
+      "notes": "Frequent transfer for SkyTeam connections."
+    },
+    "T3-T5": {
+      "mct_min": 90,
+      "method": "Take the free Heathrow transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
+      "notes": "BA codeshares often connect this way."
+    },
+    "T4-T5": {
+      "mct_min": 90,
+      "method": "Take the free Heathrow transfer train (or Elizabeth line) between T4 and T5. Transit is about 5-10 minutes.",
+      "notes": "Allow time — you'll need to clear security again at T5."
+    }
   },
-  "T2-T3": {
-    "mct_min": 75,
-    "method": "Walking link between Terminal 2 and Terminal 3 (about 10 minutes via the underground walkway).",
-    "notes": "T2 and T3 are physically very close. No transit train needed."
+  "alliance_mct": {
+    "oneworld_same_terminal": {"mct_min": 60, "notes": "BA, AA, CX, IB, JL, QF, QR, AY, MH, RJ, S7, UL at same LHR terminal — e.g. BA → BA at T5."},
+    "oneworld_cross_terminal": {"mct_min": 90, "notes": "Same-alliance but different terminals (e.g. AA T3 → BA T5). Bag through-checked on single PNR."},
+    "star_alliance_T2_same": {"mct_min": 60, "notes": "LH, UA, AC, SQ, NH, OS, TK, TG, ET, SK, OZ, NZ, CA, EW within Terminal 2."},
+    "star_alliance_cross_terminal": {"mct_min": 90, "notes": "Star Alliance codeshare connecting via different terminal (e.g. LH T2 → BA T5 on Star/oneworld codeshare)."},
+    "skyteam_T4_same": {"mct_min": 60, "notes": "AF, KL, DL, KE, MU, VN, GA, SV, RO, AM within Terminal 4."},
+    "skyteam_cross_terminal": {"mct_min": 120, "notes": "SkyTeam departure from a different terminal — rare since most SkyTeam at T4."},
+    "cross_alliance_same_terminal": {"mct_min": 90, "notes": "Different alliance same terminal — likely separate tickets or rare codeshare. Confirm bag rules."},
+    "cross_alliance_cross_terminal": {"mct_min": 150, "notes": "Different alliance + different terminal. Likely need to collect bag and re-check."},
+    "separate_tickets": {"mct_min": 180, "notes": "Self-connection on separate tickets — collect bag, exit landside, re-check at next airline, re-clear security. Always add buffer."}
   },
-  "T2-T4": {
-    "mct_min": 120,
-    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between terminals. Allow 15-20 minutes for the transit.",
-    "notes": "Furthest pairing. Build in plenty of buffer."
+  "airline_alliances": {
+    "BA": "oneworld", "AA": "oneworld", "CX": "oneworld", "IB": "oneworld", "JL": "oneworld", "QR": "oneworld", "QF": "oneworld", "AY": "oneworld", "MH": "oneworld", "RJ": "oneworld", "S7": "oneworld", "UL": "oneworld", "AT": "oneworld",
+    "LH": "star_alliance", "UA": "star_alliance", "AC": "star_alliance", "SQ": "star_alliance", "NH": "star_alliance", "OS": "star_alliance", "TK": "star_alliance", "TG": "star_alliance", "ET": "star_alliance", "SK": "star_alliance", "LO": "star_alliance", "OZ": "star_alliance", "NZ": "star_alliance", "CA": "star_alliance", "EW": "star_alliance", "LX": "star_alliance", "SN": "star_alliance", "TP": "star_alliance", "MS": "star_alliance",
+    "AF": "skyteam", "KL": "skyteam", "DL": "skyteam", "KE": "skyteam", "MU": "skyteam", "VN": "skyteam", "GA": "skyteam", "SV": "skyteam", "RO": "skyteam", "AM": "skyteam", "ME": "skyteam", "KQ": "skyteam",
+    "EK": "none", "EY": "none", "VS": "none", "WY": "none", "PK": "none", "BG": "none", "GF": "none", "KU": "none"
   },
-  "T2-T5": {
-    "mct_min": 90,
-    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
-    "notes": "Common BA connection if your inbound was a Star Alliance flight to T2."
-  },
-  "T3-T4": {
-    "mct_min": 120,
-    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central and T4. Transit is about 10-15 minutes.",
-    "notes": "Frequent transfer for SkyTeam connections."
-  },
-  "T3-T5": {
-    "mct_min": 90,
-    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between Central terminals and T5. Transit is about 5-10 minutes.",
-    "notes": "BA codeshares often connect this way."
-  },
-  "T4-T5": {
-    "mct_min": 90,
-    "method": "Take the free Heathrow Express transfer train (or Elizabeth line) between T4 and T5. Transit is about 5-10 minutes.",
-    "notes": "Allow time — you'll need to clear security again at T5."
-  },
+  "bag_rules": [
+    "Same airline + single PNR: bag through-checked to final destination — stay airside.",
+    "Same alliance + single PNR with interline: usually through-checked. Confirm at first check-in.",
+    "Different airlines on separate tickets: collect bag at first arrival, exit landside, re-check at next airline's counter, re-clear security.",
+    "Self-connection (DIY ticketing): no through-check — same as separate tickets.",
+    "From outside the UK Common Travel Area connecting to a domestic UK flight (e.g. LHR → Edinburgh): bag may be tagged through but you still re-screen at next terminal."
+  ],
+  "immigration_rules": [
+    "Most transit passengers staying airside do NOT need to clear UK immigration if connecting within 24 hours.",
+    "Long layover (>24h) or wanting to leave the airport: must clear UK immigration and may need a visitor or transit visa.",
+    "Direct Airside Transit Visa (DATV) is required for some nationalities even airside — check gov.uk/check-uk-visa.",
+    "Connecting to a domestic UK flight from outside the Common Travel Area: you must clear UK Border Control before continuing.",
+    "US-bound flights: no pre-clearance at LHR — clear US immigration on arrival."
+  ],
   "general_tips": [
-    "Free transfer trains (Heathrow Express or Elizabeth line) connect all terminals airside-to-airside if you're transit-only.",
+    "Free transfer trains (Heathrow transfer / Elizabeth line) connect all terminals airside-to-airside if you're transit-only.",
     "If you cleared immigration on arrival you'll need to re-enter the airside zone, which means another security screening.",
     "Heathrow's official Minimum Connection Time is the bare minimum. For peace of mind, add 30 minutes.",
-    "If your bag is checked through, you generally don't need to collect it between flights — confirm with the airline."
+    "If your bag is checked through, you generally don't need to collect it between flights — confirm with the airline at check-in.",
+    "Fast Track at security is included with premium cabins or oneworld Emerald/Sapphire / Star Alliance Gold / SkyTeam Elite Plus."
   ]
 }
