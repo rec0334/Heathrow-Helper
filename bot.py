@@ -203,10 +203,9 @@ def _respond_en(msg: str) -> str:
     if "lounge" in m:
         return handle_lounges(m)
 
-    if any(k in m for k in ["amex", "american express", "priority pass", "loungekey", "dragonpass", "sapphire reserve", "venture x", "hsbc premier", "revolut metal", "revolut ultra", "virgin atlantic reward", "centurion card"]):
-        card_key = _match_card(m)
-        if card_key:
-            return handle_card_lounges(card_key)
+    card_key = _match_card(m)
+    if card_key:
+        return handle_card_lounges(card_key)
 
     if any(k in m for k in BAGGAGE_KEYWORDS):
         return handle_baggage(m)
@@ -799,22 +798,26 @@ def _match_card(m: str):
         "amex platinum": ["american express platinum", "amex plat", "platinum amex"],
         "amex centurion": ["centurion card", "amex black", "black card"],
         "amex business platinum": ["business platinum"],
-        "hsbc premier world elite": ["hsbc premier", "hsbc world elite", "hsbc we"],
-        "virgin atlantic reward+": ["virgin reward", "virgin atlantic reward", "virgin mastercard"],
-        "chase sapphire reserve": ["sapphire reserve", "csr"],
-        "capital one venture x": ["venture x", "cap one venture"],
-        "barclays avios plus": ["avios plus", "barclays avios"],
-        "natwest premier reward black": ["natwest black", "natwest premier"],
-        "amex gold": ["american express gold"],
+        "hsbc premier world elite": ["hsbc premier", "hsbc world elite", "hsbc we", "hsbc mastercard", "hsbc credit", "hsbc card", "hsbc"],
+        "virgin atlantic reward+": ["virgin reward", "virgin atlantic reward", "virgin mastercard", "virgin atlantic card", "virgin card"],
+        "chase sapphire reserve": ["sapphire reserve", "csr", "chase sapphire", "chase card", "chase credit", "chase mastercard", "chase visa", "chase"],
+        "capital one venture x": ["venture x", "cap one venture", "capital one card", "capital one"],
+        "barclays avios plus": ["avios plus", "barclays avios", "barclays premier", "barclays card", "barclays credit", "barclaycard", "barclays mastercard", "barclays"],
+        "natwest premier reward black": ["natwest black", "natwest premier", "natwest reward", "natwest card", "natwest credit", "natwest mastercard", "natwest"],
+        "amex gold": ["american express gold", "amex gold card", "gold amex"],
         "revolut metal": ["revolut metal"],
         "revolut ultra": ["revolut ultra"],
-        "priority pass": ["priority-pass"],
-        "loungekey": ["lounge key"],
-        "dragonpass": ["dragon pass"],
+        "priority pass": ["priority-pass", "priority pass card"],
+        "loungekey": ["lounge key", "lounge-key"],
+        "dragonpass": ["dragon pass", "dragon-pass"],
     }
     for key, alts in aliases.items():
         if any(a in m for a in alts):
             return key
+    if " amex " in m or " american express " in m:
+        return "amex platinum"
+    if " revolut " in m:
+        return "revolut metal"
     return None
 
 
