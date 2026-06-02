@@ -712,7 +712,6 @@ def handle_destination(text: str, terminal_filter: str = None):
 
 
 def handle_cancellations(kind: str = "both"):
-    out_lines = []
     totals = {"departures": 0, "arrivals": 0}
     sections = []
     feeds = []
@@ -723,7 +722,7 @@ def handle_cancellations(kind: str = "both"):
     for feed_kind, label, other_port_type in feeds:
         data = _fetch_lhr_flights(feed_kind)
         if not data:
-            sections.append(f"**{label}:** _live data temporarily unavailable_")
+            sections.append(f"### {label}\n_live data temporarily unavailable_")
             continue
         cancelled = []
         for f in data:
@@ -735,27 +734,40 @@ def handle_cancellations(kind: str = "both"):
                     break
         totals[feed_kind] = len(cancelled)
         if not cancelled:
-            sections.append(f"**{label}:** _none on the live board right now_ ✅")
+            sections.append(f"### {label}\n_none on the live board right now_ ✅")
             continue
         lhr_port_type = "ORIGIN" if feed_kind == "departures" else "DESTINATION"
-        cancelled.sort(key=lambda x: (
-            (_lhr_port(x, lhr_port_type).get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
-        ))
-        items = []
-        for f in cancelled[:15]:
-            fs = f.get("flightService", {})
-            fn = fs.get("iataFlightIdentifier", "?")
+        by_terminal = {"2": [], "3": [], "4": [], "5": [], "?": []}
+        for f in cancelled:
             lhr_p = _lhr_port(f, lhr_port_type)
-            other_p = _lhr_port(f, other_port_type)
-            sched_local = (lhr_p.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
-            sched_hhmm = sched_local[11:16] if sched_local else "?"
-            terminal = _clean((lhr_p.get("airportFacility", {}).get("terminalFacility") or {}).get("code"))
-            other_iata = (other_p.get("airportFacility") or {}).get("iataIdentifier", "?")
-            other_city = ((other_p.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", other_iata)
-            arrow = "→" if feed_kind == "departures" else "←"
-            items.append(f"- **{sched_hhmm}** — **{fn}** • T{terminal} {arrow} {other_city} ({other_iata})")
-        more = f"\n_+ {len(cancelled) - 15} more_" if len(cancelled) > 15 else ""
-        sections.append(f"**{label} today: {len(cancelled)}**\n" + "\n".join(items) + more)
+            terminal = (lhr_p.get("airportFacility", {}).get("terminalFacility") or {}).get("code") or "?"
+            terminal = str(terminal)
+            if terminal not in by_terminal:
+                by_terminal[terminal] = []
+            by_terminal[terminal].append(f)
+        section_lines = [f"### {label} ({len(cancelled)} today)"]
+        arrow = "→" if feed_kind == "departures" else "←"
+        for tid in ["2", "3", "4", "5", "?"]:
+            terminal_flights = by_terminal.get(tid, [])
+            if not terminal_flights:
+                continue
+            terminal_flights.sort(key=lambda x: (
+                (_lhr_port(x, lhr_port_type).get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
+            ))
+            t_label = f"Terminal {tid}" if tid != "?" else "Terminal unknown"
+            section_lines.append("")
+            section_lines.append(f"**{t_label}** — {len(terminal_flights)} cancelled")
+            for f in terminal_flights:
+                fs = f.get("flightService", {})
+                fn = fs.get("iataFlightIdentifier", "?")
+                lhr_p = _lhr_port(f, lhr_port_type)
+                other_p = _lhr_port(f, other_port_type)
+                sched_local = (lhr_p.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
+                sched_hhmm = sched_local[11:16] if sched_local else "?"
+                other_iata = (other_p.get("airportFacility") or {}).get("iataIdentifier", "?")
+                other_city = ((other_p.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", other_iata)
+                section_lines.append(f"- **{sched_hhmm}** — **{fn}** {arrow} {other_city} ({other_iata})")
+        sections.append("\n".join(section_lines))
     header = "**Heathrow cancellations today**"
     summary = f"\n*Live board: {totals.get('departures', 0)} cancelled departures, {totals.get('arrivals', 0)} cancelled arrivals.*\n"
     body = "\n\n".join(sections)
