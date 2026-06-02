@@ -1,78 +1,312 @@
 {
-  "Aer Lingus": {"terminal": 2, "note": "Star Alliance side."},
-  "Air Canada": {"terminal": 2, "note": "Star Alliance."},
-  "Air China": {"terminal": 2, "note": "Star Alliance."},
-  "Air India": {"terminal": 2, "note": "Star Alliance."},
-  "Air New Zealand": {"terminal": 2, "note": "Star Alliance."},
-  "ANA": {"terminal": 2, "note": "All Nippon. Star Alliance."},
-  "All Nippon": {"terminal": 2, "note": "ANA. Star Alliance."},
-  "Asiana": {"terminal": 2, "note": "Star Alliance."},
-  "Austrian": {"terminal": 2, "note": "Star Alliance."},
-  "Avianca": {"terminal": 2, "note": "Star Alliance."},
-  "Brussels Airlines": {"terminal": 2, "note": "Star Alliance."},
-  "Croatia Airlines": {"terminal": 2, "note": "Star Alliance."},
-  "EgyptAir": {"terminal": 2, "note": "Star Alliance."},
-  "Ethiopian": {"terminal": 2, "note": "Star Alliance."},
-  "Eurowings": {"terminal": 2, "note": "Lufthansa group."},
-  "EVA Air": {"terminal": 2, "note": "Star Alliance."},
-  "Lufthansa": {"terminal": 2, "note": "Star Alliance hub partner."},
-  "LOT": {"terminal": 2, "note": "Star Alliance."},
-  "SAS": {"terminal": 2, "note": "Star Alliance."},
-  "Singapore Airlines": {"terminal": 2, "note": "Star Alliance."},
-  "South African": {"terminal": 2, "note": "Star Alliance."},
-  "Swiss": {"terminal": 2, "note": "Star Alliance."},
-  "TAP": {"terminal": 2, "note": "Star Alliance."},
-  "Turkish Airlines": {"terminal": 2, "note": "Star Alliance."},
-  "United": {"terminal": 2, "note": "Star Alliance."},
-  "American Airlines": {"terminal": 3, "note": "Oneworld. Some shared at T5 with BA."},
-  "Cathay Pacific": {"terminal": 3, "note": "Oneworld."},
-  "Delta": {"terminal": 3, "note": "SkyTeam. Joint with Virgin."},
-  "Emirates": {"terminal": 3, "note": "Dubai gateway."},
-  "Finnair": {"terminal": 3, "note": "Oneworld."},
-  "JAL": {"terminal": 3, "note": "Japan Airlines. Oneworld."},
-  "Japan Airlines": {"terminal": 3, "note": "JAL. Oneworld."},
-  "Malaysia Airlines": {"terminal": 3, "note": "Oneworld."},
-  "Oman Air": {"terminal": 3, "note": "."},
-  "Qantas": {"terminal": 3, "note": "Oneworld."},
-  "Qatar": {"terminal": 3, "note": "Oneworld."},
-  "Saudia": {"terminal": 3, "note": "SkyTeam."},
-  "Sri Lankan": {"terminal": 3, "note": "Oneworld."},
-  "Virgin Atlantic": {"terminal": 3, "note": "SkyTeam. Joint Delta."},
-  "Air France": {"terminal": 4, "note": "SkyTeam."},
-  "China Eastern": {"terminal": 4, "note": "SkyTeam."},
-  "China Southern": {"terminal": 4, "note": "SkyTeam."},
-  "El Al": {"terminal": 4, "note": "."},
-  "Etihad": {"terminal": 4, "note": "."},
-  "Garuda": {"terminal": 4, "note": "SkyTeam."},
-  "Gulf Air": {"terminal": 4, "note": "."},
-  "Kenya Airways": {"terminal": 4, "note": "SkyTeam."},
-  "KLM": {"terminal": 4, "note": "SkyTeam."},
-  "Korean Air": {"terminal": 4, "note": "SkyTeam."},
-  "Kuwait Airways": {"terminal": 4, "note": "."},
-  "MEA": {"terminal": 4, "note": "Middle East Airlines. SkyTeam."},
-  "Pakistan": {"terminal": 4, "note": "PIA."},
-  "Philippine": {"terminal": 4, "note": "."},
-  "Royal Air Maroc": {"terminal": 4, "note": "Oneworld."},
-  "Royal Jordanian": {"terminal": 4, "note": "Oneworld."},
-  "Vietnam Airlines": {"terminal": 4, "note": "SkyTeam."},
-  "Vueling": {"terminal": 4, "note": "."},
-  "British Airways": {"terminal": 5, "note": "BA hub. Iberia code-share."},
-  "BA": {"terminal": 5, "note": "British Airways hub."},
-  "Iberia": {"terminal": 5, "note": "Oneworld. With BA."},
-  "Aegean": {"terminal": 2, "note": "Star Alliance."},
-  "Air Astana": {"terminal": 2, "note": "Kazakhstan flag."},
-  "Air Serbia": {"terminal": 2, "note": "."},
-  "Bulgaria Air": {"terminal": 2, "note": "."},
-  "Hainan": {"terminal": 2, "note": "China carrier."},
-  "ITA Airways": {"terminal": 4, "note": "SkyTeam. Alitalia successor."},
-  "ITA": {"terminal": 4, "note": "SkyTeam."},
-  "JetBlue": {"terminal": 5, "note": "BA partner."},
-  "Royal Brunei": {"terminal": 4, "note": "."},
-  "Hong Kong Airlines": {"terminal": 3, "note": "."},
-  "Norse Atlantic": {"terminal": 3, "note": "Low-cost long-haul."},
-  "Bangkok Airways": {"terminal": 3, "note": "."},
-  "Air Premia": {"terminal": 3, "note": "Korea low-cost long-haul."},
-  "Uzbekistan Airways": {"terminal": 4, "note": "."},
-  "Sudan Airways": {"terminal": 4, "note": "."},
-  "Tunisair": {"terminal": 2, "note": "."}
+  "Aer Lingus": {
+    "terminal": 2,
+    "note": "Star Alliance side."
+  },
+  "Air Canada": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Air China": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Air India": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Air New Zealand": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "ANA": {
+    "terminal": 2,
+    "note": "All Nippon. Star Alliance."
+  },
+  "All Nippon": {
+    "terminal": 2,
+    "note": "ANA. Star Alliance."
+  },
+  "Asiana": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Austrian": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Avianca": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Brussels Airlines": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Croatia Airlines": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "EgyptAir": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Ethiopian": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Eurowings": {
+    "terminal": 2,
+    "note": "Lufthansa group."
+  },
+  "EVA Air": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Lufthansa": {
+    "terminal": 2,
+    "note": "Star Alliance hub partner."
+  },
+  "LOT": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "SAS": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Singapore Airlines": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "South African": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Swiss": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "TAP": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Turkish Airlines": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "United": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "American Airlines": {
+    "terminal": 3,
+    "note": "Oneworld. Some shared at T5 with BA."
+  },
+  "Cathay Pacific": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "Delta": {
+    "terminal": 3,
+    "note": "SkyTeam. Joint with Virgin."
+  },
+  "Emirates": {
+    "terminal": 3,
+    "note": "Dubai gateway."
+  },
+  "Finnair": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "JAL": {
+    "terminal": 3,
+    "note": "Japan Airlines. Oneworld."
+  },
+  "Japan Airlines": {
+    "terminal": 3,
+    "note": "JAL. Oneworld."
+  },
+  "Malaysia Airlines": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "Oman Air": {
+    "terminal": 3,
+    "note": "."
+  },
+  "Qantas": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "Qatar": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "Saudia": {
+    "terminal": 3,
+    "note": "SkyTeam."
+  },
+  "Sri Lankan": {
+    "terminal": 3,
+    "note": "Oneworld."
+  },
+  "Virgin Atlantic": {
+    "terminal": 3,
+    "note": "SkyTeam. Joint Delta."
+  },
+  "Air France": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "China Eastern": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "China Southern": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "El Al": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Etihad": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Garuda": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "Gulf Air": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Kenya Airways": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "KLM": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "Korean Air": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "Kuwait Airways": {
+    "terminal": 4,
+    "note": "."
+  },
+  "MEA": {
+    "terminal": 4,
+    "note": "Middle East Airlines. SkyTeam."
+  },
+  "Pakistan": {
+    "terminal": 4,
+    "note": "PIA."
+  },
+  "Philippine": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Royal Air Maroc": {
+    "terminal": 4,
+    "note": "Oneworld."
+  },
+  "Royal Jordanian": {
+    "terminal": 4,
+    "note": "Oneworld."
+  },
+  "Vietnam Airlines": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "Vueling": {
+    "terminal": 4,
+    "note": "."
+  },
+  "British Airways": {
+    "terminal": 5,
+    "note": "BA hub. Most flights from T5; some short-haul European and selected long-haul operate from T3. Iberia code-share.",
+    "secondary_terminals": [
+      3
+    ]
+  },
+  "BA": {
+    "terminal": 5,
+    "note": "British Airways hub. Most flights from T5, but selected short-haul European and a few long-haul flights operate from T3.",
+    "secondary_terminals": [
+      3
+    ]
+  },
+  "Iberia": {
+    "terminal": 5,
+    "note": "Oneworld. With BA."
+  },
+  "Aegean": {
+    "terminal": 2,
+    "note": "Star Alliance."
+  },
+  "Air Astana": {
+    "terminal": 2,
+    "note": "Kazakhstan flag."
+  },
+  "Air Serbia": {
+    "terminal": 2,
+    "note": "."
+  },
+  "Bulgaria Air": {
+    "terminal": 2,
+    "note": "."
+  },
+  "Hainan": {
+    "terminal": 2,
+    "note": "China carrier."
+  },
+  "ITA Airways": {
+    "terminal": 4,
+    "note": "SkyTeam. Alitalia successor."
+  },
+  "ITA": {
+    "terminal": 4,
+    "note": "SkyTeam."
+  },
+  "JetBlue": {
+    "terminal": 5,
+    "note": "BA partner."
+  },
+  "Royal Brunei": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Hong Kong Airlines": {
+    "terminal": 3,
+    "note": "."
+  },
+  "Norse Atlantic": {
+    "terminal": 3,
+    "note": "Low-cost long-haul."
+  },
+  "Bangkok Airways": {
+    "terminal": 3,
+    "note": "."
+  },
+  "Air Premia": {
+    "terminal": 3,
+    "note": "Korea low-cost long-haul."
+  },
+  "Uzbekistan Airways": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Sudan Airways": {
+    "terminal": 4,
+    "note": "."
+  },
+  "Tunisair": {
+    "terminal": 2,
+    "note": "."
+  }
 }

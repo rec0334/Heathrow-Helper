@@ -330,7 +330,7 @@
   </header>
 
   <div class="chip-bar" id="chips">
-    <button class="chip" data-sub="departures">🛫 Departures by city</button>
+    <button class="chip" data-sub="departures">🛫 Departures</button>
     <button class="chip" data-sub="arrivals">🛬 Arrivals</button>
     <button class="chip" data-sub="lounges">🛋️ Lounges</button>
     <button class="chip" data-sub="security">🔒 Security wait</button>
@@ -441,7 +441,87 @@
 
     const SUB_MENUS = {
       departures: {
-        label: 'Where to?',
+        label: 'Which terminal?',
+        items: [
+          ['Terminal 2', '__next__:t2-dest'],
+          ['Terminal 3', '__next__:t3-dest'],
+          ['Terminal 4', '__next__:t4-dest'],
+          ['Terminal 5', '__next__:t5-dest'],
+          ['All terminals', '__next__:any-dest'],
+        ],
+      },
+      't2-dest': {
+        label: 'T2 — Where to?',
+        items: [
+          ['All T2 departures', 'departures from T2'],
+          ['Dublin', 'flights from T2 to Dublin'],
+          ['Frankfurt', 'flights from T2 to Frankfurt'],
+          ['Munich', 'flights from T2 to Munich'],
+          ['Zurich', 'flights from T2 to Zurich'],
+          ['Newark (NYC)', 'flights from T2 to Newark'],
+          ['Lisbon', 'flights from T2 to Lisbon'],
+          ['Istanbul', 'flights from T2 to Istanbul'],
+          ['Stockholm', 'flights from T2 to Stockholm'],
+          ['Copenhagen', 'flights from T2 to Copenhagen'],
+          ['Vienna', 'flights from T2 to Vienna'],
+          ['Toronto', 'flights from T2 to Toronto'],
+          ['Other city…', '__prompt__:flights from T2 to '],
+        ],
+      },
+      't3-dest': {
+        label: 'T3 — Where to?',
+        items: [
+          ['All T3 departures', 'departures from T3'],
+          ['New York (JFK)', 'flights from T3 to JFK'],
+          ['Los Angeles', 'flights from T3 to Los Angeles'],
+          ['Dubai', 'flights from T3 to Dubai'],
+          ['Hong Kong', 'flights from T3 to Hong Kong'],
+          ['Atlanta', 'flights from T3 to Atlanta'],
+          ['Dallas', 'flights from T3 to Dallas'],
+          ['Boston', 'flights from T3 to Boston'],
+          ['Helsinki', 'flights from T3 to Helsinki'],
+          ['Philadelphia', 'flights from T3 to Philadelphia'],
+          ['Charlotte', 'flights from T3 to Charlotte'],
+          ['Tokyo', 'flights from T3 to Tokyo'],
+          ['Other city…', '__prompt__:flights from T3 to '],
+        ],
+      },
+      't4-dest': {
+        label: 'T4 — Where to?',
+        items: [
+          ['All T4 departures', 'departures from T4'],
+          ['Amsterdam', 'flights from T4 to Amsterdam'],
+          ['Doha', 'flights from T4 to Doha'],
+          ['Paris (CDG)', 'flights from T4 to Paris'],
+          ['Abu Dhabi', 'flights from T4 to Abu Dhabi'],
+          ['Riyadh', 'flights from T4 to Riyadh'],
+          ['Bahrain', 'flights from T4 to Bahrain'],
+          ['Kuala Lumpur', 'flights from T4 to Kuala Lumpur'],
+          ['Jeddah', 'flights from T4 to Jeddah'],
+          ['Tel Aviv', 'flights from T4 to Tel Aviv'],
+          ['Other city…', '__prompt__:flights from T4 to '],
+        ],
+      },
+      't5-dest': {
+        label: 'T5 — Where to?',
+        items: [
+          ['All T5 departures', 'departures from T5'],
+          ['Madrid', 'flights from T5 to Madrid'],
+          ['Edinburgh', 'flights from T5 to Edinburgh'],
+          ['Glasgow', 'flights from T5 to Glasgow'],
+          ['New York (JFK)', 'flights from T5 to JFK'],
+          ['Barcelona', 'flights from T5 to Barcelona'],
+          ['Paris', 'flights from T5 to Paris'],
+          ['Amsterdam', 'flights from T5 to Amsterdam'],
+          ['Rome', 'flights from T5 to Rome'],
+          ['Dublin', 'flights from T5 to Dublin'],
+          ['Berlin', 'flights from T5 to Berlin'],
+          ['Manchester', 'flights from T5 to Manchester'],
+          ['Other city…', '__prompt__:flights from T5 to '],
+        ],
+      },
+      'any-dest': {
+        label: 'Where to (any terminal)?',
         items: [
           ['Dubai', 'flights to Dubai'],
           ['New York', 'flights to New York'],
@@ -590,6 +670,11 @@
       if (!sc) return;
       const q = sc.dataset.q;
       if (!q) return;
+      if (q.startsWith('__next__:')) {
+        const nextKey = q.slice('__next__:'.length);
+        showSubs(nextKey, null);
+        return;
+      }
       if (q.startsWith('__prompt__:')) {
         const tpl = q.slice('__prompt__:'.length);
         input.value = tpl;

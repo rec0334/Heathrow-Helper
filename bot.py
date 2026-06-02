@@ -177,6 +177,15 @@ def _respond_en(msg: str) -> str:
         return "Hi! What can I help you with?"
     m = " " + re.sub(r"[^\w\s-]", " ", msg.lower().strip()) + " "
 
+    from_term_dest = re.search(r"flights?\s+from\s+t(?:erminal)?\s*([2345])\s+to\s+(.+?)(?:[\?\.!]|$)", m, re.I)
+    if from_term_dest:
+        return handle_destination(from_term_dest.group(2).strip(), terminal_filter=from_term_dest.group(1))
+
+    term_only = re.search(r"(?:departures?\s+from\s+t(?:erminal)?\s*([2345])|t(?:erminal)?\s*([2345])\s+departures?)\b", m, re.I)
+    if term_only:
+        t = term_only.group(1) or term_only.group(2)
+        return handle_terminal_departures(t)
+
     dest_match = re.search(r"(?:flights?\s+(?:to|for)|departures?\s+to|next\s+flight\s+to|going\s+to|flying\s+to|fly\s+to|travel\s+to)\s+(.+?)(?:\s+today|\s+tomorrow|\s+now|[\?\.!]|$)", m, re.I)
     if dest_match and not re.search(r"\b[A-Z]{2,3}\s?\d{1,4}\b", msg.upper()):
         dest_text = dest_match.group(1).strip()
@@ -621,7 +630,7 @@ def _fetch_dep_to(arr_iata: str):
         return None
 
 
-def handle_destination(text: str):
+def handle_destination(text: str, terminal_filter: str = None):
     city, iatas = _resolve_destination(text)
     if not iatas:
         return (
@@ -641,8 +650,12 @@ def handle_destination(text: str):
             dest_iata = ((dest_port.get("airportFacility") or {}).get("iataIdentifier") or "").upper()
             if dest_iata not in iatas_set:
                 continue
-            sched_utc = (dest_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
             origin_port = _lhr_port(f, "ORIGIN")
+            if terminal_filter:
+                term = (origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("code")
+                if str(term) != str(terminal_filter):
+                    continue
+            sched_utc = (dest_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
             origin_sched_utc = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
             try:
                 ts = datetime.fromisoformat(origin_sched_utc[:19]).replace(tzinfo=timezone.utc)
@@ -652,14 +665,17 @@ def handle_destination(text: str):
                 continue
             matches.append((ts, dest_iata, f))
     if not matches:
+        tail = f" from Terminal {terminal_filter}" if terminal_filter else ""
         return (
-            f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}) on Heathrow's live board for today, "
+            f"Couldn't find any LHR flights to **{city.title()}** ({', '.join(iatas)}){tail} on Heathrow's live board for today, "
             "or they have already departed. Try the Heathrow app for tomorrow's schedule."
         )
     matches.sort(key=lambda x: x[0])
     matches = matches[:10]
     multi_airport = len(iatas) > 1
     header = f"**Today's flights from Heathrow to {city.title()}**"
+    if terminal_filter:
+        header = f"**Today's flights from Terminal {terminal_filter} to {city.title()}**"
     if multi_airport:
         header += f" (airports: {', '.join(iatas)})"
     lines = [header, ""]
@@ -684,6 +700,62 @@ def handle_destination(text: str):
     lines.append("")
     first_fn = matches[0][2].get("flightService", {}).get("iataFlightIdentifier", "BA177")
     lines.append(f"*Tip:* Ask *'{first_fn} status'* for full details on a specific flight.")
+    lines.append("*Source: Heathrow live departure board.*")
+    return "\n".join(lines)
+
+
+def handle_terminal_departures(terminal: str):
+    feed = _fetch_lhr_flights("departures")
+    if not feed:
+        return f"Couldn't reach Heathrow's live departure board right now. Try again shortly."
+    from datetime import datetime, timezone, timedelta
+    from collections import Counter
+    now_utc = datetime.now(timezone.utc)
+    upcoming = []
+    by_dest = Counter()
+    city_lookup = {}
+    for f in feed:
+        origin_port = _lhr_port(f, "ORIGIN")
+        t = (origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("code")
+        if str(t) != str(terminal):
+            continue
+        sched_utc = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("utc", "")
+        try:
+            ts = datetime.fromisoformat(sched_utc[:19]).replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+        if ts < now_utc - timedelta(minutes=30):
+            continue
+        dest_port = _lhr_port(f, "DESTINATION")
+        iata = ((dest_port.get("airportFacility") or {}).get("iataIdentifier") or "")
+        city = ((dest_port.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", iata)
+        by_dest[iata] += 1
+        city_lookup[iata] = city
+        upcoming.append((ts, f, iata, city))
+    if not upcoming:
+        return f"No remaining departures from **Terminal {terminal}** today on Heathrow's live board."
+    upcoming.sort(key=lambda x: x[0])
+    next8 = upcoming[:8]
+    lines = [f"**Terminal {terminal} — next departures**", ""]
+    for ts, f, iata, city in next8:
+        fs = f["flightService"]
+        fn = fs.get("iataFlightIdentifier", "?")
+        origin_port = _lhr_port(f, "ORIGIN")
+        sched_local = (origin_port.get("operatingTimes", {}).get("scheduled") or {}).get("local", "")
+        gate = _clean(((origin_port.get("airportFacility", {}).get("terminalFacility") or {}).get("gateFacility") or {}).get("gateNumber"))
+        statuses = fs.get("aircraftMovement", {}).get("aircraftMovementStatus") or []
+        sc = statuses[0].get("statusCode", "") if statuses else ""
+        msg = statuses[0].get("message", "") if statuses else ""
+        status_data = statuses[0].get("statusData") or []
+        badge = _lhr_badge(sc, msg, status_data, mode="departure") or msg or "Scheduled"
+        sched_hhmm = sched_local[11:16] if sched_local else "?"
+        lines.append(f"- **{sched_hhmm}** — **{fn}** to {city} ({iata}) • Gate {gate} • {badge}")
+    lines.append("")
+    lines.append(f"**Top destinations from T{terminal} today** (remaining flights):")
+    top_list = [(iata, count) for iata, count in by_dest.most_common(12)]
+    lines.append(", ".join(f"{city_lookup.get(i, i)} ({c})" for i, c in top_list))
+    lines.append("")
+    lines.append(f"*Ask 'flights from T{terminal} to <city>' for a specific destination, or tap a city pill above.*")
     lines.append("*Source: Heathrow live departure board.*")
     return "\n".join(lines)
 
@@ -1183,13 +1255,28 @@ def flight_status(fn: str, mode: str = "departure"):
 
 def find_terminal(airline: str, info: dict):
     t = info["terminal"]
+    secondary = info.get("secondary_terminals") or []
     walk = WALK.get(str(t), "?")
     note = info.get("note", "")
     note_part = f" {note}" if note and note != "." else ""
+    all_terms = [t] + secondary
+    if len(all_terms) == 1:
+        terminal_line = f"**{airline}** flies from **Terminal {t}**.{note_part}"
+        tube_line = f"- **Tube/Elizabeth line stop:** Heathrow Terminal {t}"
+        walk_line = f"- **Walk to gate after security:** about {walk} minutes"
+    else:
+        sec_str = " or ".join(f"**Terminal {x}**" for x in all_terms)
+        terminal_line = f"**{airline}** flies from {sec_str}.{note_part}"
+        tube_line = "- **Tube/Elizabeth line stops:** " + " or ".join(f"Heathrow Terminal {x}" for x in all_terms)
+        walk_line = "- **Walk to gate after security:** " + " / ".join(f"T{x}: ~{WALK.get(str(x), '?')} min" for x in all_terms)
+    tip = ""
+    if len(all_terms) > 1:
+        tip = "\n\n*Tip:* Check your boarding pass for the exact terminal — ask *'<airline> flight no.> status'* (e.g. *'BA177 status'*) to see live terminal and gate."
     return (
-        f"**{airline}** flies from **Terminal {t}**.{note_part}\n\n"
-        f"- **Tube/Elizabeth line stop:** Heathrow Terminal {t}\n"
-        f"- **Walk to gate after security:** about {walk} minutes"
+        f"{terminal_line}\n\n"
+        f"{tube_line}\n"
+        f"{walk_line}"
+        f"{tip}"
     )
 
 
