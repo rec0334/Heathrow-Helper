@@ -2,6 +2,7 @@ import difflib
 import json
 import os
 import re
+import threading
 import time
 from pathlib import Path
 
@@ -12,6 +13,7 @@ load_dotenv()
 
 CACHE_TTL = 60
 _cache: dict = {}
+_card_cache: dict = {}
 _translation_cache: dict = {}
 
 DATA = Path(__file__).parent / "data"
@@ -172,9 +174,42 @@ def respond(msg: str) -> str:
     return _translate(en_reply, source="en", target=lang)
 
 
+_FLIGHT_TYPO_RE = re.compile(r"\b([A-Za-z]{2,3}?)\s?([0-9OoIiLl]{2,4})\b")
+
+_CLEAN_FN_RE = re.compile(r"\b[A-Za-z]{2,3}\s?\d{1,4}\b")
+
+def _normalize_flight_typos(s: str) -> str:
+    """Fix obvious flight-number typos like EKOO8 -> EK008 (letter O/I/L -> digit).
+    Skips strings that already contain a clean letter+digit flight code."""
+    def fix(match):
+        matched = match.group(0)
+        if _CLEAN_FN_RE.search(matched):
+            return matched
+        code = match.group(1)
+        rest = match.group(2).upper()
+        fixed = rest.replace("O", "0").replace("I", "1").replace("L", "1")
+        if fixed.isdigit() and any(c in rest for c in "OIL"):
+            return code.upper() + fixed
+        return matched
+    return _FLIGHT_TYPO_RE.sub(fix, s)
+
+
 def _respond_en(msg: str) -> str:
     if not msg:
         return "Hi! What can I help you with?"
+    orig_msg = msg
+    msg = _normalize_flight_typos(msg)
+    if msg != orig_msg:
+        orig_m = _FLIGHT_TYPO_RE.search(orig_msg)
+        new_m = _CLEAN_FN_RE.search(msg)
+        if orig_m and new_m:
+            try:
+                _card_acc.typo_note = (
+                    f"💡 *I read **{orig_m.group(0).upper().replace(' ', '')}** as "
+                    f"**{new_m.group(0).upper().replace(' ', '')}** — let me know if you meant a different flight.*\n\n"
+                )
+            except AttributeError:
+                pass
     m = " " + re.sub(r"[^\w\s-]", " ", msg.lower().strip()) + " "
     date_iso, date_label, m_no_date = _extract_date(m)
     if date_iso:
@@ -194,12 +229,12 @@ def _respond_en(msg: str) -> str:
         return handle_terminal_departures(t, date=date_iso, date_label=date_label)
 
     dest_match = re.search(r"(?:flights?\s+(?:to|for)|departures?\s+to|next\s+flight\s+to|going\s+to|flying\s+to|fly\s+to|travel\s+to)\s+(.+?)(?:\s+now|[\?\.!]|$)", m_eff, re.I)
-    if dest_match and not re.search(r"\b[A-Z]{2,3}\s?\d{1,4}\b", msg.upper()):
+    if dest_match and not re.search(r"\b[A-Z]{2,3}\s?\d{1,4}\b", m_eff.upper()):
         dest_text = dest_match.group(1).strip()
         if dest_text and dest_text not in ("uk", "the uk", "central london", "london", "paddington"):
             return handle_destination(dest_text, date=date_iso, date_label=date_label)
 
-    _fn_early = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
+    _fn_early = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", m_eff.upper())
     _arr_keys = ["arriv", "land", "landing", "lands", "baggage belt", "baggage reclaim", "pick up", "picking up", "pickup"]
     _dep_keys = ["depart", "takeoff", "take off", "leaves", "leaving", "boarding"]
     if _fn_early and any(k in m_eff for k in _arr_keys) and not any(k in m_eff for k in _dep_keys):
@@ -224,7 +259,7 @@ def _respond_en(msg: str) -> str:
     if any(k in m for k in ["heathrow express", "elizabeth line", "lizzie line", "piccadilly line", "paddington", "tube to", "train to", "train from", "train ticket", "underground from", "rail link"]):
         return handle_trains(m)
 
-    two_fn = re.findall(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
+    two_fn = re.findall(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", m_eff.upper())
     if len(two_fn) >= 2 and any(k in m for k in ["connection", "connect", "transfer", "then", " to ", " and "]):
         in_fn = two_fn[0][0] + two_fn[0][1]
         out_fn = two_fn[1][0] + two_fn[1][1]
@@ -270,7 +305,7 @@ def _respond_en(msg: str) -> str:
             or any(any(kw in m for kw in kws) for kws in TRANSPORT_ALIASES.values()):
         return handle_transport(m)
 
-    fn = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", msg.upper())
+    fn = re.search(r"\b([A-Z]{2,3})\s?(\d{1,4})\b", m_eff.upper())
     ARRIVAL_KEYS = ["arriv", "land", "landing", "lands", "when does it get", "baggage belt", "baggage reclaim", "pick up", "picking up", "pickup"]
     DEPARTURE_KEYS = ["depart", "takeoff", "take off", "leaves", "leaving", "boarding"]
     is_arrival = any(k in m_eff for k in ARRIVAL_KEYS) and not any(k in m_eff for k in DEPARTURE_KEYS)
@@ -1046,7 +1081,57 @@ def _extract_date(m: str):
             except Exception:
                 pass
     if iso is None:
+        months = {
+            "january": 1, "jan": 1, "february": 2, "feb": 2, "march": 3, "mar": 3,
+            "april": 4, "apr": 4, "may": 5, "june": 6, "jun": 6, "july": 7, "jul": 7,
+            "august": 8, "aug": 8, "september": 9, "sept": 9, "sep": 9,
+            "october": 10, "oct": 10, "november": 11, "nov": 11, "december": 12, "dec": 12,
+        }
+        month_alt = "|".join(months.keys())
+        pat1 = re.compile(r"\b(?:on\s+|the\s+)?(\d{1,2})(?:st|nd|rd|th)?\s*(?:of\s+)?(" + month_alt + r")\b(?:\s+(20\d{2}))?", re.I)
+        pat2 = re.compile(r"\b(?:on\s+)?(" + month_alt + r")\s*(\d{1,2})(?:st|nd|rd|th)?\b(?:,?\s+(20\d{2}))?", re.I)
+        pat3 = re.compile(r"\b(?:on\s+)?(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](20?\d{2}))?\b")
+        for pat, day_first in [(pat1, True), (pat2, False), (pat3, "numeric")]:
+            mm = pat.search(m)
+            if not mm:
+                continue
+            try:
+                if day_first == "numeric":
+                    day, month = int(mm.group(1)), int(mm.group(2))
+                    yr_raw = mm.group(3)
+                    if yr_raw:
+                        yr = int(yr_raw) if len(yr_raw) == 4 else 2000 + int(yr_raw)
+                        years_to_try = [yr]
+                    else:
+                        years_to_try = [today.year, today.year + 1]
+                elif day_first:
+                    day, month_name = int(mm.group(1)), mm.group(2).lower()
+                    month = months[month_name]
+                    yr_raw = mm.group(3)
+                    years_to_try = [int(yr_raw)] if yr_raw else [today.year, today.year + 1]
+                else:
+                    month_name, day = mm.group(1).lower(), int(mm.group(2))
+                    month = months[month_name]
+                    yr_raw = mm.group(3)
+                    years_to_try = [int(yr_raw)] if yr_raw else [today.year, today.year + 1]
+                for yr in years_to_try:
+                    try:
+                        d = datetime(yr, month, day).date()
+                    except ValueError:
+                        continue
+                    delta = (d - today).days
+                    if 0 <= delta <= 365:
+                        iso = d.isoformat()
+                        label = d.strftime("%a %d %b") if delta < 7 else d.strftime("%d %b %Y")
+                        stripped = stripped[:mm.start()] + " " + stripped[mm.end():]
+                        break
+                if iso:
+                    break
+            except (KeyError, ValueError):
+                continue
+    if iso is None:
         return None, None, m
+    stripped = re.sub(r"\s+(on|for|in)\s*$", " ", stripped)
     stripped = re.sub(r"\s+", " ", stripped).strip()
     return iso, label, stripped
 
@@ -1072,22 +1157,37 @@ def _fetch_lhr_flights(kind: str, date: str = None):
         return None
 
 
+def _flight_number_variants(fn_u: str) -> set:
+    variants = {fn_u}
+    m = re.match(r"^([A-Z]{2,3})(\d+)$", fn_u)
+    if m:
+        prefix, num = m.group(1), m.group(2)
+        variants.add(prefix + num.lstrip("0"))
+        variants.add(prefix + num.zfill(3))
+        variants.add(prefix + num.zfill(4))
+    return variants
+
+
 def _find_lhr_flight(fn: str, kind: str, date: str = None):
     flights = _fetch_lhr_flights(kind, date=date)
     if not flights:
         return None
     fn_u = fn.upper().replace(" ", "").replace("-", "")
-    m = re.match(r"^([A-Z]{2,3})(\d+)$", fn_u)
-    candidates = {fn_u}
-    if m:
-        prefix, num = m.group(1), m.group(2)
-        candidates.add(prefix + num.lstrip("0"))
-        candidates.add(prefix + num.zfill(3))
-        candidates.add(prefix + num.zfill(4))
+    candidates = _flight_number_variants(fn_u)
     for f in flights:
         ident = (f.get("flightService", {}).get("iataFlightIdentifier") or "").upper().replace(" ", "").replace("-", "")
         if ident in candidates:
             return f
+    for f in flights:
+        summary = (f.get("flightService", {}).get("codeShareSummary") or "").upper()
+        if not summary:
+            continue
+        for partner in summary.split(","):
+            p = partner.strip().replace(" ", "").replace("-", "")
+            if not p:
+                continue
+            if p in candidates or candidates & _flight_number_variants(p):
+                return f
     return None
 
 
@@ -1176,6 +1276,15 @@ def _flight_from_lhr(fn: str, mode: str, date: str = None):
     other_iata = (other_port.get("airportFacility") or {}).get("iataIdentifier", "?")
     other_city = ((other_port.get("airportFacility") or {}).get("airportCityLocation") or {}).get("name", "")
     lhr_iata = (lhr_port.get("airportFacility") or {}).get("iataIdentifier", "?")
+    fs = f.get("flightService", {})
+    codeshare_raw = (fs.get("codeShareSummary") or "").strip()
+    codeshare_list = [p.strip() for p in codeshare_raw.split(",") if p.strip()] if codeshare_raw else []
+    operating_ident = (fs.get("iataFlightIdentifier") or "").upper().replace(" ", "").replace("-", "")
+    other_times = other_port.get("operatingTimes", {}) or {}
+    other_sched_local = (other_times.get("scheduled") or {}).get("local", "")
+    other_est_local = (other_times.get("estimated") or {}).get("local", "")
+    other_actual_local = (other_times.get("actual") or {}).get("local", "")
+    duration_min = am.get("scheduledFlightDurationMinutes")
     return {
         "flight": fn,
         "badge": badge,
@@ -1191,6 +1300,12 @@ def _flight_from_lhr(fn: str, mode: str, date: str = None):
         "other_iata": other_iata,
         "other_city": other_city,
         "lhr_iata": lhr_iata,
+        "operating_flight": operating_ident,
+        "codeshares": codeshare_list,
+        "other_scheduled": other_sched_local[11:16] if other_sched_local else "",
+        "other_estimated": other_est_local[11:16] if other_est_local else "",
+        "other_actual": other_actual_local[11:16] if other_actual_local else "",
+        "duration_min": duration_min,
     }
 
 
@@ -1265,11 +1380,20 @@ def _badge_arrival(status, delay, sched_iso, est_iso, actual_iso, baggage):
 
 def flight_status(fn: str, mode: str = "departure", date: str = None, date_label: str = None):
     cache_key = f"{fn}:{mode}:{date or 'today'}"
+    typo_note = getattr(_card_acc, "typo_note", "") or ""
+    if typo_note:
+        try:
+            _card_acc.typo_note = ""
+        except AttributeError:
+            pass
     now = time.time()
     hit = _cache.get(cache_key)
     if hit and now - hit[0] < CACHE_TTL:
-        return hit[1] + "\n\n*(cached)*"
+        for c in _card_cache.get(cache_key, ()):
+            _emit_card(c)
+        return typo_note + hit[1] + "\n\n*(cached)*"
 
+    asked_mode = mode
     lhr = _flight_from_lhr(fn, mode, date=date)
     if not lhr:
         other_mode = "arrival" if mode == "departure" else "departure"
@@ -1278,6 +1402,32 @@ def flight_status(fn: str, mode: str = "departure", date: str = None, date_label
             lhr = alt
             mode = other_mode
     if lhr:
+        fn_norm = fn.upper().replace(" ", "").replace("-", "")
+        op_norm = lhr.get("operating_flight") or ""
+        user_variants = _flight_number_variants(fn_norm)
+        op_variants = _flight_number_variants(op_norm) if op_norm else set()
+        searched_codeshare = bool(op_norm) and not (user_variants & op_variants)
+        codeshare_line = ""
+        if searched_codeshare:
+            codeshare_line += f"\n- **Operating flight:** {op_norm}"
+        if lhr.get("codeshares"):
+            codeshare_line += f"\n- **Also marketed as:** {', '.join(lhr['codeshares'])}"
+        dest_block = ""
+        if asked_mode == "arrival" and mode == "departure":
+            arr_local = lhr.get("other_actual") or lhr.get("other_estimated") or lhr.get("other_scheduled") or ""
+            dur = lhr.get("duration_min")
+            dur_str = ""
+            if dur:
+                h, mn = divmod(int(dur), 60)
+                dur_str = f"{h}h {mn:02d}m" if h else f"{mn}m"
+            if arr_local or dur_str:
+                dest_block = f"\n\n**Landing in {lhr['other_city']} ({lhr['other_iata']})**"
+                if arr_local:
+                    when_label = "Actual" if lhr.get("other_actual") else ("Estimated" if lhr.get("other_estimated") else "Scheduled")
+                    dest_block += f"\n- **{when_label} arrival (local):** {arr_local}"
+                if dur_str:
+                    dest_block += f"\n- **Flight time:** {dur_str}"
+                dest_block += f"\n- *Baggage belt and arrival terminal at {lhr['other_iata']} aren't on Heathrow's board — check the {lhr['other_city']} airport app or your airline.*"
         if mode == "departure":
             extra = ""
             if lhr["zone"]:
@@ -1296,8 +1446,10 @@ def flight_status(fn: str, mode: str = "departure", date: str = None, date_label
                 f"- **Gate:** {lhr['gate']}"
                 f"{extra}\n"
                 + "\n".join(time_lines)
-                + f"\n- **Heathrow status:** {lhr['status_message']}\n\n"
-                "*Source: Heathrow live departure board.*"
+                + f"\n- **Heathrow status:** {lhr['status_message']}"
+                + codeshare_line
+                + dest_block
+                + "\n\n*Source: Heathrow live departure board.*"
             )
         else:
             time_lines = [f"- **Scheduled arrival:** {lhr['scheduled']}"]
@@ -1311,22 +1463,20 @@ def flight_status(fn: str, mode: str = "departure", date: str = None, date_label
                 f"- **Arrival terminal:** {lhr['terminal']}\n"
                 f"- **Arrival gate:** {lhr['gate']}\n"
                 + "\n".join(time_lines)
-                + f"\n- **Heathrow status:** {lhr['status_message']}\n\n"
-                "*Source: Heathrow live arrival board.*"
+                + f"\n- **Heathrow status:** {lhr['status_message']}"
+                + codeshare_line
+                + "\n\n*Source: Heathrow live arrival board.*"
             )
             if lhr["lhr_iata"] == "LHR":
                 out += "\n\n*Pickup tip:* Short Stay car parks at every terminal — drop-off charge £7 (5 min). Free pickup at Long Stay (Park & Ride)."
+        _emit_suggestions(_flight_suggestions(fn, lhr, mode, asked_mode))
+        _record_card(cache_key, _card_from_lhr(fn, lhr, mode, asked_mode=asked_mode))
         _cache[cache_key] = (now, out)
-        return out
+        return typo_note + out
 
     if not AVIA_KEY:
-        return (
-            f"**{fn}** isn't on Heathrow's live board right now. This usually means:\n\n"
-            "- The flight isn't operating today\n"
-            "- The flight number is for a codeshare partner (try the operating carrier's number)\n"
-            "- It's outside today's published schedule window\n\n"
-            "Check the Heathrow app or your airline for the latest."
-        )
+        _emit_suggestions(_not_found_suggestions(fn))
+        return _flight_not_found_message(fn, date_label, reason="not_on_board")
     try:
         r = requests.get(
             "http://api.aviationstack.com/v1/flights",
@@ -1337,15 +1487,13 @@ def flight_status(fn: str, mode: str = "departure", date: str = None, date_label
         if body.get("error"):
             err_msg = (body["error"].get("message") or "").lower()
             if "monthly usage limit" in err_msg or "subscription plan" in err_msg or "quota" in err_msg:
-                return (
-                    f"**{fn}** isn't on Heathrow's live board right now, and the backup flight-data service has hit its monthly limit.\n\n"
-                    "Try a Heathrow-departing or Heathrow-arriving flight (those use the airport's own feed and always work). "
-                    "For destinations outside LHR, check your airline app for now."
-                )
-            return f"Couldn't reach the backup flight-data service: *{body['error'].get('message', 'unknown error')}*. Try again shortly."
+                _emit_suggestions(_not_found_suggestions(fn))
+                return _flight_not_found_message(fn, date_label, reason="not_on_board")
+            return f"⚠️ Couldn't reach the flight-data service right now: *{body['error'].get('message', 'unknown error')}*. Please try again in a moment."
         d = body.get("data") or []
         if not d:
-            return f"I couldn't find **{fn}** on today's schedule. Please double-check the flight number, or try again later."
+            _emit_suggestions(_not_found_suggestions(fn))
+            return _flight_not_found_message(fn, date_label, reason="unknown")
         f = d[0]
         dep = f.get("departure") or {}
         arr = f.get("arrival") or {}
@@ -1408,6 +1556,7 @@ def flight_status(fn: str, mode: str = "departure", date: str = None, date_label
                 lines.append(f"- **Delay:** {delay} min")
             lines.append(f"- **Status (raw):** {status}")
             out = "\n".join(lines)
+        _record_card(cache_key, _card_from_aviationstack(fn, f, dep, arr, mode))
         _cache[cache_key] = (now, out)
         return out
     except Exception as e:
@@ -1788,3 +1937,284 @@ def help_msg():
         "- **VAT refund / duty-free** — *'VAT refund desk'* or *'duty-free at Heathrow'*\n"
         "- **UK customs allowance** — *'customs allowance'* or *'alcohol I can bring into UK'*"
     )
+
+
+# ============================================================
+# Additive cards API
+# Adds structured payloads alongside the existing markdown reply
+# WITHOUT modifying respond() or its callers.
+# ============================================================
+
+_card_acc = threading.local()
+
+
+def _emit_card(card: dict) -> None:
+    """Publish a structured card. No-op if called outside respond_full()."""
+    cards = getattr(_card_acc, "cards", None)
+    if cards is not None and card:
+        cards.append(card)
+
+
+def _emit_suggestions(items) -> None:
+    """Publish follow-up suggestions. Each item: {'label': str, 'query': str}."""
+    bucket = getattr(_card_acc, "suggestions", None)
+    if bucket is None or not items:
+        return
+    for it in items:
+        if it and it.get("label") and it.get("query"):
+            bucket.append({"label": it["label"], "query": it["query"]})
+
+
+def _record_card(cache_key: str, card: dict) -> None:
+    """Emit + memoize so a cached reply replays the same card."""
+    if not card:
+        return
+    _emit_card(card)
+    _card_cache[cache_key] = [card]
+
+
+# IATA carrier code -> display name. Top ~25 carriers at LHR.
+# Used only for card display; unknown codes simply omit the airline name.
+_AIRLINE_NAMES = {
+    "BA": "British Airways", "VS": "Virgin Atlantic", "EI": "Aer Lingus",
+    "AA": "American Airlines", "DL": "Delta Air Lines", "UA": "United Airlines",
+    "AC": "Air Canada", "AF": "Air France", "KL": "KLM",
+    "LH": "Lufthansa", "LX": "SWISS", "OS": "Austrian Airlines",
+    "SN": "Brussels Airlines", "TP": "TAP Air Portugal", "IB": "Iberia",
+    "AY": "Finnair", "SK": "SAS", "AZ": "ITA Airways",
+    "TK": "Turkish Airlines", "EK": "Emirates", "EY": "Etihad",
+    "QR": "Qatar Airways", "SV": "Saudia", "GF": "Gulf Air",
+    "MS": "EgyptAir", "ET": "Ethiopian Airlines", "SA": "South African",
+    "AI": "Air India", "SQ": "Singapore Airlines", "CX": "Cathay Pacific",
+    "MH": "Malaysia Airlines", "TG": "Thai Airways", "JL": "Japan Airlines",
+    "NH": "ANA", "OZ": "Asiana", "KE": "Korean Air",
+    "QF": "Qantas", "NZ": "Air New Zealand", "LO": "LOT Polish",
+    "OK": "Czech Airlines", "JU": "Air Serbia",
+}
+
+
+def _airline_name_from_fn(fn: str) -> str:
+    """Map flight number prefix (e.g. 'BA178') to airline display name."""
+    code = (fn or "")[:2].upper()
+    return _AIRLINE_NAMES.get(code, "")
+
+
+# Maps a rendered badge string back to (label, kind) for card status pill.
+# Kind feeds CSS color: ontime|delayed|cancelled|boarding|landed|info.
+def _card_status_from_badge(badge: str) -> tuple:
+    b = badge or ""
+    bu = b.upper()
+    if "CANCELLED" in bu:        return ("Cancelled",  "cancelled")
+    if "DIVERTED"  in bu:        return ("Diverted",   "cancelled")
+    if "INCIDENT"  in bu:        return ("Incident",   "cancelled")
+    if "LANDED"    in bu:        return ("Landed",     "landed")
+    if "ARRIVED"   in bu:        return ("Arrived",    "landed")
+    if "BAG"       in bu and "BELT" in bu:
+                                 return ("Landed",     "landed")
+    if "BOARDING"  in bu:        return ("Boarding",   "boarding")
+    if "FINAL CALL" in bu or "CLOSING" in bu:
+                                 return ("Final call", "boarding")
+    if "GATE CLOSED" in bu:      return ("Gate closed", "info")
+    if "GATE OPEN" in bu:        return ("Gate open",  "boarding")
+    if "DELAYED"   in bu:        return ("Delayed",    "delayed")
+    if "ESTIMATED" in bu:        return ("Estimated",  "delayed")
+    if "IN FLIGHT" in bu:        return ("In flight",  "info")
+    if "DEPARTED"  in bu:        return ("Departed",   "info")
+    if "TAXIING"   in bu:        return ("Taxiing",    "info")
+    if "ON TIME"   in bu:        return ("On time",    "ontime")
+    return ("Scheduled", "info")
+
+
+def _card_from_lhr(fn: str, lhr: dict, mode: str, asked_mode: str = None) -> dict:
+    """Build a card from a _flight_from_lhr() dict."""
+    if not lhr:
+        return {}
+    label, kind = _card_status_from_badge(lhr.get("badge", ""))
+    if mode == "departure":
+        from_iata, from_city = lhr.get("lhr_iata", ""), "London Heathrow"
+        to_iata,   to_city   = lhr.get("other_iata", ""), lhr.get("other_city", "")
+    else:
+        from_iata, from_city = lhr.get("other_iata", ""), lhr.get("other_city", "")
+        to_iata,   to_city   = lhr.get("lhr_iata", ""), "London Heathrow"
+    actual = lhr.get("actual") or lhr.get("estimated") or lhr.get("scheduled")
+    card = {
+        "type": "flight",
+        "flight": fn.upper(),
+        "airline": _airline_name_from_fn(fn),
+        "from_iata": from_iata or "",
+        "from_city": from_city or "",
+        "to_iata":   to_iata or "",
+        "to_city":   to_city or "",
+        "terminal":  lhr.get("terminal", ""),
+        "gate":      lhr.get("gate", ""),
+        "scheduled": lhr.get("scheduled", ""),
+        "estimated": lhr.get("estimated", ""),
+        "actual":    actual,
+        "status_label": label,
+        "status_kind":  kind,
+        "mode":   mode,
+        "source": "heathrow.com",
+    }
+    if asked_mode == "arrival" and mode == "departure":
+        arr_t = lhr.get("other_actual") or lhr.get("other_estimated") or lhr.get("other_scheduled") or ""
+        if arr_t:
+            label_kind = "Actual" if lhr.get("other_actual") else ("Estimated" if lhr.get("other_estimated") else "Scheduled")
+            card["landing_time"] = arr_t
+            card["landing_time_label"] = label_kind
+            card["landing_city"] = lhr.get("other_city", "")
+            card["landing_iata"] = lhr.get("other_iata", "")
+        dur = lhr.get("duration_min")
+        if dur:
+            h, mn = divmod(int(dur), 60)
+            card["landing_duration"] = f"{h}h {mn:02d}m" if h else f"{mn}m"
+    return card
+
+
+def _flight_not_found_message(fn: str, date_label: str = None, reason: str = "unknown") -> str:
+    """User-friendly 'wrong flight number' response with examples and likely causes."""
+    fn_u = fn.upper()
+    airline_code = re.match(r"^([A-Z]{2,3})", fn_u)
+    airline_code = airline_code.group(1) if airline_code else ""
+    airline_name = _AIRLINE_NAMES.get(airline_code, "")
+    when = date_label or "today"
+    when_phrase = "today" if when == "today" else f"on **{when}**"
+    carrier_line = f" ({airline_name})" if airline_name else ""
+    return (
+        f"❌ **Couldn't find flight {fn_u}**{carrier_line} {when_phrase}.\n\n"
+        "**Common reasons:**\n"
+        "- ✏️ **Typo** — flight numbers are 2 letters + 1–4 digits "
+        "(e.g. **BA178**, **VS302**, **EK008**)\n"
+        "- 📅 **Wrong day** — the flight may not operate "
+        + ("on that date" if when != "today" else "today (try tomorrow or another date)") + "\n"
+        "- 🤝 **Codeshare** — try the **operating airline's** number "
+        "(the one in your boarding pass header)\n"
+        "- 🛬 **Not at Heathrow** — this assistant only covers London Heathrow (LHR)\n\n"
+        "Double-check the number on your ticket and try again."
+    )
+
+
+def _not_found_suggestions(fn: str) -> list:
+    """Helpful chips shown when a flight number can't be resolved."""
+    fn_u = fn.upper()
+    airline_code = re.match(r"^([A-Z]{2,3})", fn_u)
+    airline_code = airline_code.group(1) if airline_code else ""
+    airline_name = _AIRLINE_NAMES.get(airline_code, "")
+    s = []
+    if airline_name:
+        s.append({"label": f"✈️ {airline_name} flights today", "query": f"{airline_name} flights"})
+        s.append({"label": f"📅 {airline_name} check-in times",  "query": f"{airline_name} check-in"})
+    s.extend([
+        {"label": "🛫 Departures from T5", "query": "departures from terminal 5"},
+        {"label": "🛬 Arrivals from T2",    "query": "arrivals at terminal 2"},
+        {"label": "❌ Today's cancellations","query": "cancellations today"},
+    ])
+    return s[:5]
+
+
+def _flight_suggestions(fn: str, lhr: dict, mode: str, asked_mode: str) -> list:
+    """Context-aware follow-up chips after a flight lookup."""
+    if not lhr:
+        return []
+    s = []
+    fn_u = fn.upper()
+    terminal = lhr.get("terminal") or ""
+    has_terminal = terminal and terminal != "TBA"
+    airline_code = re.match(r"^([A-Z]{2,3})", fn_u)
+    airline_code = airline_code.group(1) if airline_code else ""
+    airline_name = _AIRLINE_NAMES.get(airline_code, "")
+    other_city = lhr.get("other_city") or ""
+    other_iata = lhr.get("other_iata") or ""
+
+    if mode == "departure":
+        if has_terminal:
+            s.append({"label": f"🔒 Security wait at T{terminal}", "query": f"security wait terminal {terminal}"})
+            s.append({"label": f"🛋️ Lounges at T{terminal}",       "query": f"lounges terminal {terminal}"})
+            s.append({"label": f"🍔 Food at T{terminal}",           "query": f"dining terminal {terminal}"})
+        if airline_name:
+            s.append({"label": f"⏰ {airline_name} check-in deadline", "query": f"{airline_name} check-in"})
+            s.append({"label": f"🧳 {airline_name} baggage allowance", "query": f"{airline_name} baggage"})
+        if asked_mode != "arrival":
+            s.append({"label": f"🛬 When does {fn_u} land?", "query": f"when does {fn_u} land"})
+        if other_city:
+            s.append({"label": f"✈️ All flights to {other_city}", "query": f"flights to {other_city}"})
+    else:
+        if has_terminal:
+            s.append({"label": f"🅿️ Pickup at T{terminal}",           "query": f"pickup terminal {terminal}"})
+            s.append({"label": f"🚆 Trains from T{terminal}",         "query": f"trains from heathrow"})
+            s.append({"label": f"🛂 Immigration wait at T{terminal}", "query": f"immigration wait terminal {terminal}"})
+        s.append({"label": "💷 UK customs allowance", "query": "uk customs allowance"})
+        if other_city:
+            s.append({"label": f"✈️ Flights from {other_city} today", "query": f"flights from {other_city}"})
+
+    if lhr.get("codeshares"):
+        partners = lhr["codeshares"][:2]
+        s.append({"label": f"🤝 Codeshare {partners[0]} status", "query": f"{partners[0]} status"})
+
+    return s[:5]
+
+
+def _card_from_aviationstack(fn: str, f: dict, dep: dict, arr: dict, mode: str) -> dict:
+    """Build a card from an aviationstack flight payload."""
+    if not f:
+        return {}
+    airline_name = (f.get("airline") or {}).get("name") or _airline_name_from_fn(fn)
+    status_raw = (f.get("flight_status") or "").title()
+    delay = (arr if mode == "arrival" else dep).get("delay") or 0
+    sched_iso  = (arr if mode == "arrival" else dep).get("scheduled") or ""
+    est_iso    = (arr if mode == "arrival" else dep).get("estimated") or ""
+    actual_iso = (arr if mode == "arrival" else dep).get("actual") or ""
+    sched  = sched_iso[11:16]  if sched_iso  else ""
+    est    = est_iso[11:16]    if est_iso    else ""
+    actual = actual_iso[11:16] if actual_iso else ""
+    # Derive a coarse badge string for status mapping
+    if status_raw.lower() == "cancelled":
+        label, kind = "Cancelled", "cancelled"
+    elif status_raw.lower() == "diverted":
+        label, kind = "Diverted", "cancelled"
+    elif status_raw.lower() == "landed":
+        label, kind = "Landed", "landed"
+    elif status_raw.lower() == "active":
+        label, kind = ("In flight" if mode == "arrival" else "Departed", "info")
+    elif delay and delay >= 5:
+        label, kind = "Delayed", "delayed"
+    elif est and est != sched:
+        label, kind = "Estimated", "delayed"
+    else:
+        label, kind = "On time", "ontime"
+    return {
+        "type": "flight",
+        "flight":   fn.upper(),
+        "airline":  airline_name,
+        "from_iata": (dep.get("iata") or "").upper(),
+        "from_city": (dep.get("airport") or ""),
+        "to_iata":   (arr.get("iata") or "").upper(),
+        "to_city":   (arr.get("airport") or ""),
+        "terminal":  (arr if mode == "arrival" else dep).get("terminal") or "",
+        "gate":      (arr if mode == "arrival" else dep).get("gate") or "",
+        "scheduled": sched,
+        "estimated": est,
+        "actual":    actual or est or sched,
+        "status_label": label,
+        "status_kind":  kind,
+        "mode":   mode,
+        "source": "aviationstack.com",
+    }
+
+
+def respond_full(msg: str) -> dict:
+    """
+    Sibling of respond(): returns {"reply": str, "cards": list, "suggestions": list}.
+    respond() itself is unchanged so existing callers (test_live.py) still work.
+    """
+    _card_acc.cards = []
+    _card_acc.suggestions = []
+    _card_acc.typo_note = ""
+    try:
+        reply = respond(msg)
+        cards = list(_card_acc.cards)
+        suggestions = list(_card_acc.suggestions)
+    finally:
+        _card_acc.cards = None
+        _card_acc.suggestions = None
+        _card_acc.typo_note = ""
+    return {"reply": reply, "cards": cards, "suggestions": suggestions}

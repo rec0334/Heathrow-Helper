@@ -1,0 +1,166 @@
+/* ============================================================
+   Heathrow Helper — Marketing / Static Pages
+   About, Privacy, Terms, Contact. Header + main + footer.
+   ============================================================ */
+
+body.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---------- Header (shared with chat) ------------------- */
+
+.site-header {
+  background: var(--brand-navy);
+  color: var(--ink-inverse);
+  padding: var(--space-3) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 5;
+}
+.site-header::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--brand-accent-2);
+  opacity: 0.55;
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-glyph {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(201, 169, 110, 0.16);
+  color: var(--brand-accent-2);
+}
+.brand-glyph svg { width: 18px; height: 18px; }
+
+.brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.brand-wordmark__name {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.brand-wordmark__sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--brand-accent-2);
+  margin-top: 3px;
+}
+
+.site-header__nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.header-link {
+  color: var(--ink-inverse);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.header-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  opacity: 1;
+}
+
+/* ---------- Main content -------------------------------- */
+
+.page-main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--container-page);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5) var(--space-9);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-main h1 {
+  font-size: var(--text-3xl);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-2);
+}
+.page-main .updated {
+  color: var(--ink-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-7);
+}
+.page-main h2 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-7);
+  margin-bottom: var(--space-3);
+}
+.page-main p {
+  margin: var(--space-3) 0;
+  color: var(--ink-body);
+}
+.page-main ul {
+  padding-left: var(--space-5);
+  margin: var(--space-3) 0;
+}
+.page-main li {
+  margin: var(--space-2) 0;
+  color: var(--ink-body);
+}
+.page-main strong { color: var(--ink-strong); }
+
+/* ---------- Footer -------------------------------------- */
+
+.site-footer {
+  background: var(--brand-navy);
+  color: rgba(245, 241, 234, 0.62);
+  padding: var(--space-5) var(--space-5);
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+.site-footer strong { color: var(--ink-inverse); font-weight: 600; }
+.site-footer__nav {
+  margin-top: var(--space-2);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.site-footer__nav a {
+  color: var(--ink-inverse);
+  text-decoration: none;
+  opacity: 0.78;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.site-footer__nav a:hover { opacity: 1; text-decoration: underline; }
+
+/* ---------- Responsive ---------------------------------- */
+
+@media (max-width: 720px) {
+  .page-main {
+    padding: var(--space-6) var(--space-4) var(--space-7);
+  }
+  .page-main h1 { font-size: var(--text-2xl); }
+  .site-header { padding: var(--space-3) var(--space-4); }
+  .brand-wordmark__sub { display: none; }
+}

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify, Response, send_from_directory
-from bot import respond
+from bot import respond_full
 
 app = Flask(__name__)
 
@@ -72,7 +72,7 @@ def contact():
 @app.route("/chat", methods=["POST"])
 def chat():
     msg = (request.json or {}).get("message", "").strip()
-    return jsonify({"reply": respond(msg)})
+    return jsonify(respond_full(msg))
 
 
 @app.route("/health")
@@ -82,19 +82,20 @@ def health():
 
 @app.route("/robots.txt")
 def robots_txt():
+    base = request.host_url.rstrip("/")
     body = (
         "User-agent: *\n"
         "Allow: /\n"
         "Disallow: /chat\n"
         "Disallow: /health\n\n"
-        "Sitemap: https://heathrow-helper.onrender.com/sitemap.xml\n"
+        f"Sitemap: {base}/sitemap.xml\n"
     )
     return Response(body, mimetype="text/plain")
 
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
-    base = "https://heathrow-helper.onrender.com"
+    base = request.host_url.rstrip("/")
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     urls = [
         ("/", "daily", "1.0"),

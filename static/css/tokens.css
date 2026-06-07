@@ -1,0 +1,196 @@
+/* ============================================================
+   Heathrow Helper — Design Tokens
+   Single source of truth. Imported first, before base.css.
+   ============================================================ */
+
+:root {
+  /* --- SURFACE ---------------------------------------------- */
+  --bg-page:        #f5f1ea;
+  --bg-surface:     #ffffff;
+  --bg-elev:        #faf7f1;
+  --bg-inset:       #efeae1;
+
+  /* --- INK (text) ------------------------------------------- */
+  --ink-strong:     #0a1628;
+  --ink-body:       #2a3447;
+  --ink-muted:      #5b6577;
+  --ink-subtle:     #8590a3;
+  --ink-inverse:    #f5f1ea;
+
+  /* --- LINE ------------------------------------------------- */
+  --line:           #e6e0d4;
+  --line-strong:    #d4ccbc;
+
+  /* --- BRAND ------------------------------------------------ */
+  --brand-navy:     #0a1628;
+  --brand-navy-2:   #142540;
+  --brand-accent:   #9b1d2a;       /* matured Heathrow red */
+  --brand-accent-2: #c9a96e;       /* gold pinstripe */
+  --brand-accent-soft: rgba(155, 29, 42, 0.08);
+
+  /* --- STATUS (semantic, used in flight cards) ------------- */
+  --status-ontime-bg:    #dcfce7;
+  --status-ontime-fg:    #166534;
+  --status-delayed-bg:   #fef3c7;
+  --status-delayed-fg:   #b45309;
+  --status-cancelled-bg: #fee2e2;
+  --status-cancelled-fg: #991b1b;
+  --status-boarding-bg:  #dbeafe;
+  --status-boarding-fg:  #1e40af;
+  --status-landed-bg:    #cffafe;
+  --status-landed-fg:    #0e7490;
+  --status-info-bg:      #f1f5f9;
+  --status-info-fg:      #334155;
+
+  /* --- FOCUS ------------------------------------------------ */
+  --focus-ring:     #2563eb;
+  --shadow-focus:   0 0 0 3px rgba(37, 99, 235, 0.32);
+
+  /* --- TYPE ------------------------------------------------- */
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --text-2xs: 11px;
+  --text-xs:  12px;
+  --text-sm:  13px;
+  --text-md:  15px;
+  --text-lg:  17px;
+  --text-xl:  20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  --leading-tight:   1.25;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.6;
+
+  /* --- SPACE (4px base) ------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+
+  /* --- RADIUS ----------------------------------------------- */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-pill: 999px;
+
+  /* --- SHADOW ----------------------------------------------- */
+  --shadow-xs: 0 1px 2px rgba(10, 22, 40, 0.05);
+  --shadow-sm: 0 2px 6px rgba(10, 22, 40, 0.06), 0 1px 2px rgba(10, 22, 40, 0.04);
+  --shadow-md: 0 6px 16px rgba(10, 22, 40, 0.08), 0 2px 4px rgba(10, 22, 40, 0.05);
+  --shadow-lg: 0 16px 32px rgba(10, 22, 40, 0.10), 0 4px 8px rgba(10, 22, 40, 0.06);
+
+  /* --- MOTION ----------------------------------------------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:    120ms;
+  --dur-base:    200ms;
+  --dur-slow:    400ms;
+
+  /* --- LAYOUT ----------------------------------------------- */
+  --container-chat:  860px;
+  --container-page:  720px;
+  --safe-bottom:     env(safe-area-inset-bottom, 0px);
+}
+
+/* ============================================================
+   DARK MODE — applied via prefers-color-scheme OR
+   data-theme="dark" attribute on <html> (manual toggle).
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page:        #0a1020;
+    --bg-surface:     #141c33;
+    --bg-elev:        #1d2742;
+    --bg-inset:       #263256;
+
+    --ink-strong:     #f8fafc;
+    --ink-body:       #dbe1ee;
+    --ink-muted:      #9fa9c2;
+    --ink-subtle:     #6b7693;
+    /* --ink-inverse stays cream — pairs with permanently-navy surfaces */
+
+    --line:           #2a3553;
+    --line-strong:    #3d4a73;
+
+    --brand-navy:     #0a1628;
+    --brand-navy-2:   #182954;
+    --brand-accent:   #f04a5c;
+    --brand-accent-2: #f0c878;
+    --brand-accent-soft: rgba(240, 74, 92, 0.14);
+
+    --status-ontime-bg:    rgba(34, 197, 94, 0.18);
+    --status-ontime-fg:    #6ee7b7;
+    --status-delayed-bg:   rgba(245, 158, 11, 0.18);
+    --status-delayed-fg:   #fcd34d;
+    --status-cancelled-bg: rgba(239, 68, 68, 0.18);
+    --status-cancelled-fg: #fca5a5;
+    --status-boarding-bg:  rgba(96, 165, 250, 0.20);
+    --status-boarding-fg:  #bfdbfe;
+    --status-landed-bg:    rgba(20, 184, 166, 0.18);
+    --status-landed-fg:    #7dd3fc;
+    --status-info-bg:      rgba(148, 163, 184, 0.16);
+    --status-info-fg:      #e2e8f0;
+
+    --focus-ring:     #818cf8;
+    --shadow-focus:   0 0 0 3px rgba(129, 140, 248, 0.45);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.50);
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.42);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.60), 0 6px 12px rgba(0, 0, 0, 0.46);
+  }
+}
+
+/* Manual dark toggle — works regardless of OS preference */
+:root[data-theme="dark"] {
+  --bg-page:        #0a1020;
+  --bg-surface:     #141c33;
+  --bg-elev:        #1d2742;
+  --bg-inset:       #263256;
+
+  --ink-strong:     #f8fafc;
+  --ink-body:       #dbe1ee;
+  --ink-muted:      #9fa9c2;
+  --ink-subtle:     #6b7693;
+  /* --ink-inverse stays cream — pairs with permanently-navy surfaces */
+
+  --line:           #2a3553;
+  --line-strong:    #3d4a73;
+
+  --brand-navy:     #0a1628;
+  --brand-navy-2:   #182954;
+  --brand-accent:   #f04a5c;
+  --brand-accent-2: #f0c878;
+  --brand-accent-soft: rgba(240, 74, 92, 0.14);
+
+  --status-ontime-bg:    rgba(34, 197, 94, 0.18);
+  --status-ontime-fg:    #6ee7b7;
+  --status-delayed-bg:   rgba(245, 158, 11, 0.18);
+  --status-delayed-fg:   #fcd34d;
+  --status-cancelled-bg: rgba(239, 68, 68, 0.18);
+  --status-cancelled-fg: #fca5a5;
+  --status-boarding-bg:  rgba(96, 165, 250, 0.20);
+  --status-boarding-fg:  #bfdbfe;
+  --status-landed-bg:    rgba(20, 184, 166, 0.18);
+  --status-landed-fg:    #7dd3fc;
+  --status-info-bg:      rgba(148, 163, 184, 0.16);
+  --status-info-fg:      #e2e8f0;
+
+  --focus-ring:     #818cf8;
+  --shadow-focus:   0 0 0 3px rgba(129, 140, 248, 0.45);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.50);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.60), 0 6px 12px rgba(0, 0, 0, 0.46);
+}

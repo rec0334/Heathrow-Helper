@@ -1,0 +1,445 @@
+/* ============================================================
+   Heathrow Helper — Dark-mode visual polish
+   Loads AFTER chat.css. Adds depth, glass, gradients, glow,
+   and mobile-specific refinements that only apply in dark.
+   ============================================================ */
+
+/* Use a custom property gate so the rules apply for BOTH
+   prefers-color-scheme: dark AND manual data-theme="dark". */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --dark: 1; }
+}
+:root[data-theme="dark"] { --dark: 1; }
+
+/* ============================================================
+   1. PAGE BACKGROUND — soft radial depth
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body.app,
+  :root:not([data-theme="light"]) .chat {
+    background:
+      radial-gradient(1100px 600px at 100% -10%, rgba(240, 200, 120, 0.05), transparent 70%),
+      radial-gradient(900px 500px at -10% 110%, rgba(240, 74, 92, 0.06), transparent 70%),
+      var(--bg-page);
+  }
+}
+:root[data-theme="dark"] body.app,
+:root[data-theme="dark"] .chat {
+  background:
+    radial-gradient(1100px 600px at 100% -10%, rgba(240, 200, 120, 0.05), transparent 70%),
+    radial-gradient(900px 500px at -10% 110%, rgba(240, 74, 92, 0.06), transparent 70%),
+    var(--bg-page);
+}
+
+/* ============================================================
+   2. HEADER — glass blur + sharper gold underline
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .app-header {
+    background: linear-gradient(180deg, rgba(10, 22, 40, 0.92), rgba(10, 22, 40, 0.78));
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    backdrop-filter: saturate(160%) blur(14px);
+    border-bottom: 1px solid rgba(240, 200, 120, 0.10);
+  }
+  :root:not([data-theme="light"]) .app-header::after {
+    background: linear-gradient(90deg, transparent, var(--brand-accent-2) 30%, var(--brand-accent-2) 70%, transparent);
+    opacity: 0.45;
+  }
+  :root:not([data-theme="light"]) .brand-glyph {
+    background: linear-gradient(135deg, rgba(240, 200, 120, 0.22), rgba(240, 200, 120, 0.06));
+    box-shadow: inset 0 0 0 1px rgba(240, 200, 120, 0.18);
+  }
+}
+:root[data-theme="dark"] .app-header {
+  background: linear-gradient(180deg, rgba(10, 22, 40, 0.92), rgba(10, 22, 40, 0.78));
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid rgba(240, 200, 120, 0.10);
+}
+:root[data-theme="dark"] .app-header::after {
+  background: linear-gradient(90deg, transparent, var(--brand-accent-2) 30%, var(--brand-accent-2) 70%, transparent);
+  opacity: 0.45;
+}
+:root[data-theme="dark"] .brand-glyph {
+  background: linear-gradient(135deg, rgba(240, 200, 120, 0.22), rgba(240, 200, 120, 0.06));
+  box-shadow: inset 0 0 0 1px rgba(240, 200, 120, 0.18);
+}
+
+/* ============================================================
+   3. CHIP RAIL — clearer borders + glow on active
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip-rail-wrap {
+    background: rgba(20, 28, 51, 0.65);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  :root:not([data-theme="light"]) .chip {
+    background: rgba(29, 39, 66, 0.7);
+    border-color: rgba(61, 74, 115, 0.6);
+  }
+  :root:not([data-theme="light"]) .chip:hover {
+    background: rgba(38, 50, 86, 0.85);
+    border-color: rgba(129, 140, 248, 0.45);
+  }
+  :root:not([data-theme="light"]) .chip.is-active {
+    background: linear-gradient(135deg, #f04a5c, #c0354b);
+    border-color: #f04a5c;
+    box-shadow: 0 4px 16px rgba(240, 74, 92, 0.32);
+    color: #fff;
+  }
+}
+:root[data-theme="dark"] .chip-rail-wrap {
+  background: rgba(20, 28, 51, 0.65);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+:root[data-theme="dark"] .chip {
+  background: rgba(29, 39, 66, 0.7);
+  border-color: rgba(61, 74, 115, 0.6);
+}
+:root[data-theme="dark"] .chip:hover {
+  background: rgba(38, 50, 86, 0.85);
+  border-color: rgba(129, 140, 248, 0.45);
+}
+:root[data-theme="dark"] .chip.is-active {
+  background: linear-gradient(135deg, #f04a5c, #c0354b);
+  border-color: #f04a5c;
+  box-shadow: 0 4px 16px rgba(240, 74, 92, 0.32);
+  color: #fff;
+}
+
+/* ============================================================
+   4. MESSAGES — distinct user bubble, raised bot bubble
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .msg--bot {
+    background: linear-gradient(180deg, rgba(29, 39, 66, 0.9), rgba(20, 28, 51, 0.9));
+    border-color: rgba(61, 74, 115, 0.45);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, var(--shadow-xs);
+  }
+  :root:not([data-theme="light"]) .msg--user {
+    background: linear-gradient(135deg, #4f46e5 0%, #2540ad 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.30);
+  }
+  :root:not([data-theme="light"]) .msg--user em {
+    color: rgba(255, 255, 255, 0.78);
+  }
+  :root:not([data-theme="light"]) .msg--user a {
+    color: #fde68a;
+  }
+}
+:root[data-theme="dark"] .msg--bot {
+  background: linear-gradient(180deg, rgba(29, 39, 66, 0.9), rgba(20, 28, 51, 0.9));
+  border-color: rgba(61, 74, 115, 0.45);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, var(--shadow-xs);
+}
+:root[data-theme="dark"] .msg--user {
+  background: linear-gradient(135deg, #4f46e5 0%, #2540ad 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.30);
+}
+:root[data-theme="dark"] .msg--user em { color: rgba(255, 255, 255, 0.78); }
+:root[data-theme="dark"] .msg--user a  { color: #fde68a; }
+
+/* ============================================================
+   5. AVATAR — gradient with subtle glow
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .avatar {
+    background: linear-gradient(135deg, #f04a5c, #c0354b);
+    box-shadow: 0 0 0 1px rgba(240, 200, 120, 0.22) inset, 0 4px 12px rgba(240, 74, 92, 0.22);
+    color: #fff;
+  }
+}
+:root[data-theme="dark"] .avatar {
+  background: linear-gradient(135deg, #f04a5c, #c0354b);
+  box-shadow: 0 0 0 1px rgba(240, 200, 120, 0.22) inset, 0 4px 12px rgba(240, 74, 92, 0.22);
+  color: #fff;
+}
+
+/* ============================================================
+   6. WELCOME TILES — premium card treatment
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .welcome-tile {
+    background: linear-gradient(180deg, rgba(29, 39, 66, 0.85), rgba(20, 28, 51, 0.85));
+    border-color: rgba(61, 74, 115, 0.5);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  }
+  :root:not([data-theme="light"]) .welcome-tile:hover {
+    border-color: rgba(240, 200, 120, 0.35);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px rgba(0, 0, 0, 0.45);
+  }
+  :root:not([data-theme="light"]) .welcome-tile__icon {
+    background: linear-gradient(135deg, rgba(240, 74, 92, 0.22), rgba(240, 74, 92, 0.06));
+    box-shadow: inset 0 0 0 1px rgba(240, 74, 92, 0.30);
+    color: #fca5a5;
+  }
+  :root:not([data-theme="light"]) .welcome__tip {
+    background: linear-gradient(90deg, rgba(240, 200, 120, 0.06), rgba(240, 200, 120, 0.0));
+    border-left-color: var(--brand-accent-2);
+  }
+}
+:root[data-theme="dark"] .welcome-tile {
+  background: linear-gradient(180deg, rgba(29, 39, 66, 0.85), rgba(20, 28, 51, 0.85));
+  border-color: rgba(61, 74, 115, 0.5);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+:root[data-theme="dark"] .welcome-tile:hover {
+  border-color: rgba(240, 200, 120, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="dark"] .welcome-tile__icon {
+  background: linear-gradient(135deg, rgba(240, 74, 92, 0.22), rgba(240, 74, 92, 0.06));
+  box-shadow: inset 0 0 0 1px rgba(240, 74, 92, 0.30);
+  color: #fca5a5;
+}
+:root[data-theme="dark"] .welcome__tip {
+  background: linear-gradient(90deg, rgba(240, 200, 120, 0.06), rgba(240, 200, 120, 0.0));
+  border-left-color: var(--brand-accent-2);
+}
+
+/* ============================================================
+   7. FLIGHT CARD — depth + status glow
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .flight-card {
+    background: linear-gradient(180deg, rgba(29, 39, 66, 0.95), rgba(20, 28, 51, 0.95));
+    border-color: rgba(61, 74, 115, 0.55);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, var(--shadow-md);
+  }
+  :root:not([data-theme="light"]) .flight-spec {
+    background: rgba(61, 74, 115, 0.30);
+    border-color: rgba(61, 74, 115, 0.45);
+  }
+  :root:not([data-theme="light"]) .flight-spec__cell {
+    background: rgba(20, 28, 51, 0.7);
+  }
+  :root:not([data-theme="light"]) .status-pill {
+    box-shadow: inset 0 0 0 1px currentColor;
+  }
+  :root:not([data-theme="light"]) .live-dot {
+    background: #6ee7b7;
+    box-shadow: 0 0 8px rgba(110, 231, 183, 0.7);
+  }
+}
+:root[data-theme="dark"] .flight-card {
+  background: linear-gradient(180deg, rgba(29, 39, 66, 0.95), rgba(20, 28, 51, 0.95));
+  border-color: rgba(61, 74, 115, 0.55);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, var(--shadow-md);
+}
+:root[data-theme="dark"] .flight-spec {
+  background: rgba(61, 74, 115, 0.30);
+  border-color: rgba(61, 74, 115, 0.45);
+}
+:root[data-theme="dark"] .flight-spec__cell {
+  background: rgba(20, 28, 51, 0.7);
+}
+:root[data-theme="dark"] .status-pill {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+:root[data-theme="dark"] .live-dot {
+  background: #6ee7b7;
+  box-shadow: 0 0 8px rgba(110, 231, 183, 0.7);
+}
+
+/* Landing block — premium dark treatment */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .flight-card__landing {
+    background: linear-gradient(135deg, rgba(240, 200, 120, 0.10), rgba(240, 200, 120, 0.02));
+    border-color: rgba(240, 200, 120, 0.30);
+  }
+  :root:not([data-theme="light"]) .flight-card__landing-icon {
+    filter: drop-shadow(0 0 6px rgba(240, 200, 120, 0.45));
+  }
+  :root:not([data-theme="light"]) .flight-card__landing-cell {
+    background: rgba(10, 16, 32, 0.6);
+    border-color: rgba(61, 74, 115, 0.5);
+  }
+}
+:root[data-theme="dark"] .flight-card__landing {
+  background: linear-gradient(135deg, rgba(240, 200, 120, 0.10), rgba(240, 200, 120, 0.02));
+  border-color: rgba(240, 200, 120, 0.30);
+}
+:root[data-theme="dark"] .flight-card__landing-icon {
+  filter: drop-shadow(0 0 6px rgba(240, 200, 120, 0.45));
+}
+:root[data-theme="dark"] .flight-card__landing-cell {
+  background: rgba(10, 16, 32, 0.6);
+  border-color: rgba(61, 74, 115, 0.5);
+}
+
+/* Suggestion chips — premium dark treatment */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .suggestion-chip {
+    background: linear-gradient(180deg, rgba(29, 39, 66, 0.8), rgba(20, 28, 51, 0.85));
+    border-color: rgba(61, 74, 115, 0.5);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  }
+  :root:not([data-theme="light"]) .suggestion-chip:hover {
+    background: linear-gradient(180deg, rgba(38, 50, 86, 0.95), rgba(29, 39, 66, 0.95));
+    border-color: rgba(240, 200, 120, 0.40);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(240, 200, 120, 0.22);
+  }
+}
+:root[data-theme="dark"] .suggestion-chip {
+  background: linear-gradient(180deg, rgba(29, 39, 66, 0.8), rgba(20, 28, 51, 0.85));
+  border-color: rgba(61, 74, 115, 0.5);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+:root[data-theme="dark"] .suggestion-chip:hover {
+  background: linear-gradient(180deg, rgba(38, 50, 86, 0.95), rgba(29, 39, 66, 0.95));
+  border-color: rgba(240, 200, 120, 0.40);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(240, 200, 120, 0.22);
+}
+
+/* ============================================================
+   8. COMPOSER — glass + glowing focus
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .composer {
+    background: linear-gradient(180deg, rgba(20, 28, 51, 0.85), rgba(10, 16, 32, 0.95));
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    backdrop-filter: saturate(160%) blur(14px);
+    border-top: 1px solid rgba(61, 74, 115, 0.45);
+  }
+  :root:not([data-theme="light"]) .composer__input-wrap {
+    background: rgba(29, 39, 66, 0.8);
+    border-color: rgba(61, 74, 115, 0.6);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  }
+  :root:not([data-theme="light"]) .composer__input-wrap:focus-within {
+    background: rgba(38, 50, 86, 0.95);
+    border-color: rgba(129, 140, 248, 0.65);
+    box-shadow:
+      0 0 0 4px rgba(129, 140, 248, 0.18),
+      0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  }
+  :root:not([data-theme="light"]) .composer__send:not(:disabled) {
+    background: linear-gradient(135deg, #f04a5c, #c0354b);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(240, 74, 92, 0.35);
+  }
+  :root:not([data-theme="light"]) .composer__send:not(:disabled):hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(240, 74, 92, 0.45);
+  }
+}
+:root[data-theme="dark"] .composer {
+  background: linear-gradient(180deg, rgba(20, 28, 51, 0.85), rgba(10, 16, 32, 0.95));
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border-top: 1px solid rgba(61, 74, 115, 0.45);
+}
+:root[data-theme="dark"] .composer__input-wrap {
+  background: rgba(29, 39, 66, 0.8);
+  border-color: rgba(61, 74, 115, 0.6);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+:root[data-theme="dark"] .composer__input-wrap:focus-within {
+  background: rgba(38, 50, 86, 0.95);
+  border-color: rgba(129, 140, 248, 0.65);
+  box-shadow:
+    0 0 0 4px rgba(129, 140, 248, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+:root[data-theme="dark"] .composer__send:not(:disabled) {
+  background: linear-gradient(135deg, #f04a5c, #c0354b);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(240, 74, 92, 0.35);
+}
+:root[data-theme="dark"] .composer__send:not(:disabled):hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(240, 74, 92, 0.45);
+}
+
+/* ============================================================
+   9. SCROLL-TO-BOTTOM PILL — glass + glow
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .scroll-bottom {
+    background: rgba(29, 39, 66, 0.9);
+    border-color: rgba(129, 140, 248, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(129, 140, 248, 0.18);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
+:root[data-theme="dark"] .scroll-bottom {
+  background: rgba(29, 39, 66, 0.9);
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(129, 140, 248, 0.18);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   10. FOOTER
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .app-footer {
+    background: rgba(10, 16, 32, 0.7);
+    border-top-color: rgba(61, 74, 115, 0.35);
+  }
+}
+:root[data-theme="dark"] .app-footer {
+  background: rgba(10, 16, 32, 0.7);
+  border-top-color: rgba(61, 74, 115, 0.35);
+}
+
+/* ============================================================
+   11. MOBILE — touch targets, tighter rails, larger send btn
+   ============================================================ */
+
+@media (max-width: 480px) {
+  .composer { padding: 10px 12px; padding-bottom: max(10px, var(--safe-bottom)); }
+  .composer__input-wrap { min-height: 52px; padding: 4px 6px 4px 10px; }
+  .composer__input { font-size: 16px; padding: var(--space-2) 6px; }
+  .composer__send { width: 44px; height: 44px; }
+  .composer__mic  { width: 40px; height: 40px; }
+  .composer__hint { display: none; }
+
+  .chip-rail { padding: 10px 12px; gap: 6px; }
+  .chip { padding: 8px 14px; min-height: 38px; font-size: var(--text-sm); }
+
+  .app-header { padding: 12px 14px; gap: 10px; }
+  .icon-btn { width: 40px; height: 40px; }
+
+  .welcome__greeting { font-size: var(--text-xl); }
+  .welcome__sub { font-size: var(--text-sm); }
+  .welcome-tile { padding: 14px; }
+  .welcome-tile__icon { width: 32px; height: 32px; font-size: 16px; }
+
+  .msg { font-size: var(--text-md); padding: 12px 14px; }
+  .flight-card { padding: 14px; gap: 12px; }
+  .route-endpoint__iata { font-size: var(--text-xl); }
+  .flight-spec__cell { padding: 10px; }
+}
+
+/* iOS bounce-overscroll smoothing */
+@supports (-webkit-touch-callout: none) {
+  body.app { overscroll-behavior-y: none; }
+  .chat    { overscroll-behavior-y: contain; }
+}
+
+/* Honor reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

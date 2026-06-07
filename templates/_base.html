@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <title>{% block title %}{{ title }}{% endblock %} — Heathrow Helper</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="description" content="{% block description %}{{ description }}{% endblock %}">
   <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0a1020" media="(prefers-color-scheme: dark)">
   <link rel="canonical" href="https://heathrow-helper.onrender.com{{ path }}">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.svg">
@@ -17,99 +19,48 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="{{ title }} — Heathrow Helper">
   <meta name="twitter:description" content="{{ description }}">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --lhr-red: #d22730;
-      --lhr-red-dark: #a81d24;
-      --lhr-navy: #0c1d3a;
-      --lhr-navy-2: #142a52;
-      --lhr-blue-soft: #2a4a8a;
-      --lhr-cream: #f7f3ec;
-      --text: #1a2235;
-      --text-soft: #4b5670;
-      --line: #e5e7ec;
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-      margin: 0;
-      background: var(--lhr-cream);
-      color: var(--text);
-      line-height: 1.6;
-      font-size: 15px;
-    }
-    header {
-      background: linear-gradient(180deg, var(--lhr-navy), var(--lhr-navy-2));
-      color: #fff;
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      position: relative;
-    }
-    header::after {
-      content: '';
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--lhr-red) 0 30%, #c9a96e 30% 60%, var(--lhr-blue-soft) 60% 100%);
-    }
-    .logo {
-      width: 40px; height: 40px;
-      background: var(--lhr-red);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 6px rgba(210,39,48,0.4);
-    }
-    header h1.brand { margin: 0; font-size: 17px; font-weight: 700; }
-    header .home-link { margin-left: auto; color: #fff; text-decoration: none; font-size: 14px; border: 1px solid rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 999px; }
-    header .home-link:hover { background: rgba(255,255,255,0.1); }
-    main {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 36px 22px 72px;
-      background: #fff;
-      min-height: calc(100vh - 220px);
-      box-shadow: 0 2px 10px rgba(12,29,58,0.05);
-    }
-    main h1 { color: var(--lhr-navy); font-size: 28px; margin: 0 0 8px; }
-    main .updated { color: var(--text-soft); font-size: 13px; margin-bottom: 28px; }
-    main h2 { color: var(--lhr-navy); font-size: 19px; margin-top: 32px; }
-    main p { margin: 12px 0; }
-    main ul { padding-left: 22px; }
-    main li { margin: 6px 0; }
-    main a { color: var(--lhr-red); }
-    main strong { color: var(--lhr-navy); }
-    footer {
-      background: var(--lhr-navy);
-      color: #a8b8d8;
-      padding: 18px 22px;
-      text-align: center;
-      font-size: 12px;
-    }
-    footer a { color: #fff; text-decoration: none; margin: 0 10px; }
-    footer a:hover { text-decoration: underline; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/pages.css">
+  <link rel="stylesheet" href="/static/css/dark.css">
 </head>
-<body>
-  <header>
-    <div class="logo">LHR</div>
-    <h1 class="brand">Heathrow Helper</h1>
-    <a class="home-link" href="/">← Back to chat</a>
+<body class="page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header" role="banner">
+    <a class="site-header__brand" href="/" aria-label="Heathrow Helper home">
+      <span class="brand-glyph" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12l8-2 4-7 2 1-2 6 7 2-1 2-7-1-4 6-2-1 2-5-7-1z"/>
+        </svg>
+      </span>
+      <span class="brand-wordmark">
+        <span class="brand-wordmark__name">Heathrow Helper</span>
+        <span class="brand-wordmark__sub">Your Airport Companion</span>
+      </span>
+    </a>
+    <nav class="site-header__nav" aria-label="Primary">
+      <a class="header-link" href="/">← Back to chat</a>
+    </nav>
   </header>
-  <main>
+
+  <main id="main" class="page-main" role="main">
     {% block content %}{% endblock %}
   </main>
-  <footer>
+
+  <footer class="site-footer" role="contentinfo">
     <div><strong>Heathrow Helper</strong> — unofficial passenger assistant for London Heathrow Airport (LHR)</div>
-    <div style="margin-top: 8px;">
-      <a href="/">Chat</a> · <a href="/about">About</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/contact">Contact</a>
+    <div class="site-footer__nav">
+      <a href="/">Chat</a>
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="/contact">Contact</a>
     </div>
   </footer>
 </body>
