@@ -2,7 +2,7 @@
 
 An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat web app that answers natural-language travel questions using live data from Heathrow's own public APIs.
 
-**Live demo:** https://heathrow-helper.onrender.com
+**Live demo:** https://heathrow-helper.vercel.app
 
 > Built to help first-time fliers and older travellers find flight, terminal, lounge and transport info without needing flight numbers or juggling multiple apps.
 
@@ -29,7 +29,7 @@ An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat 
 | Live data | Heathrow public flight + wait-time APIs, AviationStack fallback |
 | Static data | 17 curated JSON datasets (airlines, lounges, cards, transport, customs, etc.) |
 | Frontend | Server-rendered Jinja2, vanilla CSS (tokens / dark mode), progressive enhancement JS |
-| Deploy | Render (primary), Vercel (serverless via `api/index.py`) |
+| Deploy | Vercel (serverless via `api/index.py`) |
 
 ## Architecture
 
@@ -78,8 +78,13 @@ The Heathrow live-board API needs no key.
 
 ## Deploy
 
-- **Render** — `render.yaml` is checked in; create a new Web Service from the repo, set `AVIATIONSTACK_KEY`, done.
-- **Vercel** — `vercel.json` + `api/index.py` route all traffic through a serverless function.
+Deployed on **Vercel** — `vercel.json` rewrites all traffic to `api/index.py`, which wraps the Flask app as a serverless function. Push to `main` triggers an auto-deploy.
+
+```bash
+vercel link        # one-time
+vercel --prod      # deploy
+vercel env add AVIATIONSTACK_KEY production
+```
 
 ## Project structure
 
@@ -92,9 +97,7 @@ heathrow-bot/
 ├── templates/          # Jinja2 (index, about, privacy, terms, contact)
 ├── static/             # CSS tokens, dark theme, chat JS, favicon
 ├── docs/               # Tech-stack PDF
-├── render.yaml         # Render deploy config
 ├── vercel.json         # Vercel rewrites
-├── Procfile            # gunicorn app:app
 └── requirements.txt
 ```
 

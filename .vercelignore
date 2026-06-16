@@ -3,9 +3,6 @@ __pycache__
 .env
 .env.local
 test_live.py
-render.yaml
-Procfile
-runtime.txt
 .git
 .venv
 venv
