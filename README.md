@@ -8,6 +8,14 @@ An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat 
 
 ---
 
+## Screenshots
+
+| Welcome | Live flight card | Live security waits |
+|---|---|---|
+| ![Heathrow Helper welcome screen with quick-topic chips](docs/screenshots/01-hero.png) | ![BA178 JFK→LHR flight card showing landed status, terminal and time](docs/screenshots/02-flight-status.png) | ![Security at Terminal 5 with live wait times, immigration queues and Fast Track info](docs/screenshots/03-security.png) |
+
+---
+
 ## Features
 
 - **Live flight status** — departures and arrivals from Heathrow's live board, including delays, gate states (Gate Open / Boarding / Closing / Closed), cancellations and baggage belts.
