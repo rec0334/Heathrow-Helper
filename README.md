@@ -35,7 +35,7 @@ An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat 
 
 The Flask app is built with the **application-factory pattern**. The `app/` package exposes `create_app()`, which assembles a Flask instance and registers all routes from `app/routes.py`. Both the local runner (`app.py`) and the Vercel serverless entrypoint (`api/index.py`) construct their instance via this factory — no global app at import time.
 
-```
+```text
 ┌─────────────┐    POST /chat   ┌──────────────────────┐
 │  Browser    │ ──────────────▶ │  app/ package        │
 │  (Jinja2)   │ ◀────────────── │  create_app()        │
@@ -66,18 +66,35 @@ In-memory TTL cache (60 s) shields upstream APIs from repeat calls.
 
 ## Run locally
 
+Clone and create a virtual environment:
+
 ```bash
 git clone https://github.com/rec0334/Heathrow-Helper.git
 cd Heathrow-Helper
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS / Linux
+```
+
+Activate the venv. **Windows (PowerShell):**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**macOS / Linux:**
+
+```bash
+source .venv/bin/activate
+```
+
+Install deps, copy the env template, and run:
+
+```bash
 pip install -r requirements.txt
-copy .env.example .env          # then add your AviationStack key (optional)
+cp .env.example .env          # Windows: copy .env.example .env
 python app.py
 ```
 
-Open http://localhost:5000
+Then open <http://localhost:5000>.
 
 ### Environment
 
@@ -99,7 +116,7 @@ vercel env add AVIATIONSTACK_KEY production
 
 ## Project structure
 
-```
+```text
 Heathrow-Helper/
 ├── app.py                  # Thin local runner — instantiates create_app()
 ├── app/                    # Application package
