@@ -1,8 +1,26 @@
+# Secrets
 .env
+.env.local
+*.local
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .venv/
 venv/
-.gstack/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
 
-.vercel
+# Deploy / IDE
+.vercel/
+.gstack/
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

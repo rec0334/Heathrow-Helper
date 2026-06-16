@@ -1,0 +1,28 @@
+Copyright (c) 2026 Revanth Reddy Chitti. All rights reserved.
+
+This source code is published for portfolio and review purposes only.
+
+No license is granted to use, copy, modify, merge, publish, distribute,
+sublicense, or sell copies of this Software, in whole or in part, without
+the prior written permission of the copyright holder.
+
+You may:
+  - View the source code on GitHub.
+  - Reference small excerpts for non-commercial discussion (e.g. interviews,
+    code review, educational commentary) with attribution.
+
+You may NOT, without prior written permission:
+  - Deploy, host, or run this software (or any derivative) as a product or
+    service, commercially or non-commercially.
+  - Re-publish this source code or any substantial portion of it.
+  - Train machine-learning models on this source code.
+  - Use the "Heathrow Helper" name or branding.
+
+The curated data files under `data/` are compiled works owned by the
+copyright holder; the same restrictions apply.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. THE AUTHOR IS NOT AFFILIATED WITH HEATHROW AIRPORT LIMITED OR
+LHR AIRPORTS LIMITED.
+
+For licensing inquiries: chittirev559451@gmail.com
