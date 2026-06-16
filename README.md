@@ -24,7 +24,7 @@ An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat 
 
 | Layer | Choice |
 |---|---|
-| Backend | Python 3.12, Flask, Gunicorn |
+| Backend | Python 3.12, Flask (app-factory pattern) |
 | NLP | `langdetect`, `deep-translator`, fuzzy matching (`difflib`), n-gram intent routing |
 | Live data | Heathrow public flight + wait-time APIs, AviationStack fallback |
 | Static data | 17 curated JSON datasets (airlines, lounges, cards, transport, customs, etc.) |
@@ -33,23 +33,34 @@ An unofficial passenger assistant for **London Heathrow Airport (LHR)**. A chat 
 
 ## Architecture
 
+The Flask app is built with the **application-factory pattern**. The `app/` package exposes `create_app()`, which assembles a Flask instance and registers all routes from `app/routes.py`. Both the local runner (`app.py`) and the Vercel serverless entrypoint (`api/index.py`) construct their instance via this factory — no global app at import time.
+
 ```
-┌─────────────┐    POST /chat    ┌──────────────┐
-│  Browser    │ ───────────────▶ │  Flask app   │  app.py
-│  (Jinja2)   │ ◀─────────────── │              │
-└─────────────┘     JSON         └──────┬───────┘
+┌─────────────┐    POST /chat   ┌──────────────────────┐
+│  Browser    │ ──────────────▶ │  app/ package        │
+│  (Jinja2)   │ ◀────────────── │  create_app()        │
+└─────────────┘     JSON        │   └─ routes.py       │
+                                └──────────┬───────────┘
+                                           │
+                                           ▼
+                                  ┌──────────────────┐
+                                  │  app/bot.py      │  intent router
+                                  └─────┬────────────┘
                                         │
-                                        ▼
-                              ┌──────────────────┐
-                              │   bot.respond    │  intent router
-                              └─────┬────────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              ▼                     ▼                     ▼
-       Heathrow live API     17× JSON datasets      AviationStack
-       (flights, waits,      (lounges, cards,       (non-LHR legs
-        disruptions)          transport, customs)    for connections)
+                ┌───────────────────────┼───────────────────────┐
+                ▼                       ▼                       ▼
+         Heathrow live API       17× JSON datasets        AviationStack
+         (flights, waits,        (lounges, cards,         (non-LHR legs
+          disruptions)            transport, customs)      for connections)
 ```
+
+Entry points:
+
+| Context | File | What it does |
+|---|---|---|
+| Local dev | `app.py` | Thin runner — calls `create_app()`, then `app.run()` |
+| Vercel prod | `api/index.py` | Imports `create_app()` and exposes the WSGI `app` |
+| Tests | `tests/test_live.py` | Smoke-tests intent routing via `app.bot.respond` |
 
 In-memory TTL cache (60 s) shields upstream APIs from repeat calls.
 
@@ -89,17 +100,28 @@ vercel env add AVIATIONSTACK_KEY production
 ## Project structure
 
 ```
-heathrow-bot/
-├── app.py              # Flask routes, security headers, SEO (sitemap/robots)
-├── bot.py              # Intent routing, live-data clients, translation
-├── api/index.py        # Vercel serverless entrypoint
-├── data/               # 17 curated JSON datasets
-├── templates/          # Jinja2 (index, about, privacy, terms, contact)
-├── static/             # CSS tokens, dark theme, chat JS, favicon
-├── docs/               # Tech-stack PDF
-├── vercel.json         # Vercel rewrites
-└── requirements.txt
+Heathrow-Helper/
+├── app.py                  # Thin local runner — instantiates create_app()
+├── app/                    # Application package
+│   ├── __init__.py         #   create_app() factory
+│   ├── routes.py           #   HTTP routes (registered on the Flask instance)
+│   ├── bot.py              #   Intent routing, live-data clients, translation
+│   ├── templates/          #   Jinja2 (index, about, privacy, terms, contact)
+│   └── static/             #   CSS tokens, dark theme, chat JS, favicon
+├── api/
+│   └── index.py            # Vercel serverless entrypoint (imports create_app)
+├── data/                   # 17 curated JSON datasets
+├── tests/
+│   └── test_live.py        # Smoke test for bot intent routing
+├── docs/                   # Tech-stack PDF
+├── vercel.json             # Vercel rewrites
+├── requirements.txt
+├── .env.example            # AVIATIONSTACK_KEY placeholder
+├── LICENSE                 # All Rights Reserved
+└── README.md
 ```
+
+> **Why both `app.py` and `app/`?** `app.py` is intentionally kept as a thin runner so `python app.py` still works for local development. Python's import system prefers the package over the module of the same name, so inside the runner `from app import create_app` resolves to `app/__init__.py`. No collision.
 
 ## Endpoints
 
