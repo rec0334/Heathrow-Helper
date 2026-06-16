@@ -1,4 +1,4 @@
-from bot import respond
+from app.bot import respond
 
 QUERIES = [
     "what is SSSS",

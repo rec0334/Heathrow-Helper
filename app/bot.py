@@ -16,7 +16,7 @@ _cache: dict = {}
 _card_cache: dict = {}
 _translation_cache: dict = {}
 
-DATA = Path(__file__).parent / "data"
+DATA = Path(__file__).resolve().parent.parent / "data"
 
 
 def _load(name: str):
